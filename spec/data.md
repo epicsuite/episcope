@@ -22,6 +22,7 @@ Semantically makes the *chromosome* the top of the hierarchy.
 ```
 project/
     species/
+        somefile.gff            genomic information about the species
     chr1/                       chromosome
         meta.json               metadata
         untreated/              experiment
@@ -117,3 +118,15 @@ int,int,float,float,float
 ...
 int,int,float,float,float
 ```
+## metadata files
+
+**chromosome**
+
+```
+begin: int
+end:   int
+genes:
+    name, id, id
+    
+```
+
