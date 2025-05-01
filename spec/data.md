@@ -15,17 +15,49 @@ The IDs of a genome is a 1-based sequence of numbers.
 A chromosome is a linear sequence of `n` base pairs in a genome. it is uniquely identified
 by a begin and end ID along the genome sequence.
 
+## chromosome-based hierarchy option
+
+Semantically makes the *chromosome* the top of the hierarchy.
+
 ```
 project/
     species/
-    chr1/
-        meta.json
+    chr1/                       chromosome
+        meta.json               metadata
+        untreated/              experiment
+            001/                timestep
+                meta.json       timestep metadata
+                structure.csv   structure
+                point001.csv    point variable file (1 to n of these)
+                ...
+                peak001.csv     peak variable file  (1 to n of these)
+                ...
+        infected/
+        ...
+        exp_001/
+    chr2/
+    ...
+    chrn/
+```
+
+## experiment-based hierarchy option 
+
+Semantically makes the *experiment* the top of the hierarchy.
+
+```
+project/
+    species/
+    experiment/
         untreated/
-            structure.csv
-            001.csv
-            001.csv
-            ...
-            nnn.csv
+            chr1/                       chromosome
+                meta.json               metadata
+                001/                timestep
+                    meta.json       timestep metadata
+                    structure.csv   structure
+                    point001.csv    point variable file (1 to n of these)
+                    ...
+                    peak001.csv     peak variable file  (1 to n of these)
+                    ...
         infected/
         ...
         exp_001/
@@ -52,24 +84,36 @@ int,float,float,float
 int,float,float,float
 ```
 
-## variable arrays
+## point arrays 
 
-Variables are represented by `.csv` files, named by the type of data in the array.
+A point array file is named `pointXXX.csv`, where `XXX` is a unique identifier.
+A point array file consists of an `id` column, and any number of named columns.
+The `id` value is an id of a point along the genome. 
+The named columns are values at that point.
 
 ```
 point.csv
 
-id,varname
-int,float
+id,varname,varname,varname
+int,float,float,float
 ...
-int,float
+int,float,float,float
 ```
+
+## peak arrays 
+
+A peak array file is named `peakXXX.csv`, where `XXX` is a unique identifier. 
+A peak array file consists of two `id` columns, and any number of named columns.
+The `id` value is an id of a point along the genome. 
+The values are 0 at each `id`, and `float` at the midpoint between the two ids.
+
+The named columns are values at the midpoint between the two  
 
 ```
 peak.csv
 
-id,id,id,varname,varname,varname
-int,int,int,float,float,float
+id,id,varname,varname,varname
+int,int,float,float,float
 ...
-int,int,int,float,float,float
+int,int,float,float,float
 ```
