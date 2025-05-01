@@ -56,8 +56,9 @@ project/
     species/
     experiment/
         untreated/
-            chr1/                       chromosome
-                meta.json               metadata
+            chr1/                   chromosome
+                meta.json           metadata
+                genes.csv           genes within the chromosome
                 001/                timestep
                     meta.json       timestep metadata
                     structure.csv   structure
@@ -132,7 +133,9 @@ int,int,float,float,float
 begin: int
 end:   int
 genes:
-    name, id, id
+    name,
+    name,
+    ...
+    
     
 ```
-
