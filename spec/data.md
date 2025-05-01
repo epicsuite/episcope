@@ -15,6 +15,12 @@ The IDs of a genome is a 1-based sequence of numbers.
 A chromosome is a linear sequence of `n` base pairs in a genome. it is uniquely identified
 by a begin and end ID along the genome sequence.
 
+## ID
+
+In all contexts, an `ID` is a one-based integer that is the position of a base pair along
+the genome. A chromosome has a [begin, end] pair that identifies its place along the
+genome. A variable has `ID` values that also reference the genome. 
+
 ## chromosome-based hierarchy option
 
 Semantically makes the *chromosome* the top of the hierarchy.
