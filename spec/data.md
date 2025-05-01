@@ -1,5 +1,11 @@
 # Data specification
 
+This specification captures the data files and semantic hierarchy for representing genomics data as a collection of chromosomes with point and peak arrays applied along a 3D structure.
+
+Assumptions:
+- all data within a project has the same chromosomes, experiments, timesteps and arrays
+
+
 ## genome
 
 A genome is the genetic information for an organism. It is a sequence of nucleotides of
