@@ -3,6 +3,7 @@
 This specification captures the data files and semantic hierarchy for representing genomics data as a collection of chromosomes with point and peak arrays applied along a 3D structure.
 
 Assumptions:
+- The top level collection of data is a `project`
 - All data within a project has the same chromosomes, experiments, timesteps and arrays.
 - The chromosome structure will be represented in 3D space as a smmooth curve constrained by the points in the structure file.
 - Each chromosome's position in 3D space is in global coordinates. If two chromosomes are loaded into the same dataset/view, they would be represented correctly relative to each other.
