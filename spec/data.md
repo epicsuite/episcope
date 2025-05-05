@@ -62,24 +62,23 @@ Semantically makes the *experiment* the top of the hierarchy.
 ```
 project/
     species/
-    experiment/
-        untreated/
-            chr1/                   chromosome
-                meta.json           metadata
-                genes.csv           genes within the chromosome
-                001/                timestep
-                    meta.json       timestep metadata
-                    structure.csv   structure
-                    point001.csv    point variable file (1 to n of these)
-                    ...
-                    peak001.csv     peak variable file  (1 to n of these)
-                    ...
-        infected/
+        somefile.gff            genomic information about the species
+    experiment_001/
+        meta.json               experiment metadata
+        chr1/                   chromosome
+            meta.json           metadata
+            genes.csv           important genes within the chromosome
+            001/                timestep
+                meta.json       timestep metadata
+                structure.csv   structure
+                point001.csv    point variable file (1 to n of these)
+                ...
+                peak001.csv     peak variable file  (1 to n of these)
+                ...
         ...
-        exp_001/
-    chr2/
+    experiment_002/
     ...
-    chrn/
+    experiment_nnn/
 ```
 
 
