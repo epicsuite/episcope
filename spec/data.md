@@ -84,6 +84,16 @@ project/
     experiment_nnn/
 ```
 
+## experiment-based filename
+
+```
+    experiment_001/
+        chr1_001_point001.csv
+        chr1_001_point001.csv
+        chr1_001_peak001.csv
+        chr1_001_peak001.csv
+```
+
 
 ## structure.csv
 The `structure.csv` file defines a line in 3D space that represents the geometry of the
