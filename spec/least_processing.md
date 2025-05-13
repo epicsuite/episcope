@@ -44,17 +44,18 @@ Semantically makes the *experiment* the top of the hierarchy.
 
 ```
 project/
-    genes.csv                           important genes within the chromosome
+    genes.csv                           important genes within the genome 
+    chromosomes.yaml                    information about chromosomes
     species/
         somefile.gff                    genomic information about the species
     experiment_001/
-        meta.json                       experiment metadata
+        meta.yaml                       experiment metadata
         001/                            timestep
-            meta.json                   timestep metadata
+            meta.yaml                   timestep metadata
             structure.csv               structure
-            trackname_001.narrowPeak    peak variable file
+            trackname_001.narrowPeak    peak variable file (one or more of these)
             ...
-            compartment.bed             compartment variable file (only one)
+            compartment.bed             compartment variable file (only one of these)
         ...
     experiment_002/
     ...
@@ -107,6 +108,13 @@ NC_023642.1 16621  19699 2803_001_autosomes_peak_9a 429 . 18.7657 45.4897 42.958
 ```
 
 ## compartment.bed file specification
+
+This contains values defined along spans of the chromosome. The entire chromosome need not
+have associated values. This is the semantic meaning of the columns in this file:
+
+```
+chromosome_name start_id end_id value
+```
 
 ```
 <string> <int> <int> <float>
