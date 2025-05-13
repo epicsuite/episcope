@@ -31,7 +31,8 @@ by a begin and end ID along the genome sequence.
 In all contexts, an `ID` is a one-based integer that is the position of a base pair along
 the genome. A chromosome has a [begin, end] pair that identifies its place along the
 genome. A variable has `ID` values that also reference the genome. 
-## experiment-based hierarchy option 
+
+## project data hierarchy 
 
 Semantically makes the *experiment* the top of the hierarchy.
 
