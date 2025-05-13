@@ -26,6 +26,9 @@ The IDs of a genome is a 1-based sequence of numbers.
 A chromosome is a linear sequence of `n` base pairs in a genome. it is uniquely identified
 by a begin and end ID along the genome sequence.
 
+A `project` need not contain all possible chromosomes for a genome. However, all structure
+and track files will contain the same set of chromosomes.
+
 ## ID
 
 In all contexts, an `ID` is a one-based integer that is the position of a base pair along
@@ -57,7 +60,11 @@ project/
 
 ## structure file specification
 
-This file contains structure data for a single timestep of the experiment. 
+This file contains structure data for the genome a single timestep of the experiment.
+The data is organized by chromosomes (first column). It need not contain information for
+all chromosomes that appear in the `.gff` file. It will always have a value for the start
+and end ids of the chromosome, regardless of the resolution of the structure data. 
+The *resolution* of the chromosomes need not be the same.
 
 ```
 chromosome,id,x,y,z
