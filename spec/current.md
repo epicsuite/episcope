@@ -79,7 +79,7 @@ This file contains peak variable information for a single timestep for a single 
 This is the semantic meaning of the columns in this file:
 
 ```
-"chromosome name" start_id end_id "unused name" "unused" "unused" "unused" "unused" "value" midpoint_id
+chromosome_name start_id end_id unused unused unused unused unused midpoint_value midpoint_id
 ```
 
 This is the data type of the columns in this file:
