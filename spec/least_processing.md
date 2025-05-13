@@ -32,6 +32,12 @@ by a begin and end ID along the genome sequence.
 A `project` need not contain all possible chromosomes for a genome. However, all structure
 and track files will contain the same set of chromosomes.
 
+In general the name of a chromosome in these files will be a *terrible name* string that 
+is not readily associated with the common name (chromosome 12, etc.) of a chromosome. The 
+mapping of the *terrible name* to a common name can be found in the `chromosomes.yaml` file
+at the top of the project hierarchy.
+
+
 ## ID
 
 In all contexts, an `ID` is a one-based integer that is the position of a base pair along
