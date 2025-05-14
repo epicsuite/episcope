@@ -54,8 +54,7 @@ Semantically makes the *experiment* the top of the hierarchy.
 project/
     genes.csv                           important genes within the genome 
     chromosomes.yaml                    information about chromosomes
-    species/
-        somefile.gff                    genomic information about the species
+    species.gff                         genomic information about the species
     experiment_001/
         meta.yaml                       experiment metadata
         001/                            timestep
@@ -87,9 +86,10 @@ chromosome,id,x,y,z
 ## `.narrowPeak` file specification
 
 This file contains peak variable information for a single timestep for a single variable.
+The name of the file is the name of the variable.
 
 This is the semantic meaning of the columns in this file. The value for the `start_id` and
-`end_id` is zero, and the value at `mid_id` is `midpont_value`
+`end_id` is zero, and the value at `mid_id` is `midpont_value`:
 
 ```
 chromosome_name start_id end_id unused unused unused unused unused midpoint_value/10.0 midpoint_id
