@@ -92,7 +92,8 @@ This file contains peak variable information for a single timestep for a single 
 The name of the file is the name of the variable.
 
 This is the semantic meaning of the columns in this file. The value for the `start_id` and
-`end_id` is zero, and the value at `mid_id` is `midpont_value`:
+`end_id` is zero, and the value at `mid_id` is `midpont_value` (note that the value in this
+column is 1/10.0 the midpoint_value):
 
 ```
 chromosome_name start_id end_id unused unused unused unused unused midpoint_value/10.0 midpoint_id
