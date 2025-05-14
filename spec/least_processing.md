@@ -80,7 +80,7 @@ This includes metadata about the experiment.
 ```
 timestep:
     units: <string>         a string showing the units of the timesteps
-    <string>: <string>      one entry for each subdirectory under each experiment
+    <string>: <string>      one value entry for each directory under the experiment 
 ```
 
 ## structure file specification
