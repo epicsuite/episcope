@@ -3,7 +3,7 @@
 This specification captures the data files and semantic hierarchy for representing genomics 
 data as a collection of chromosomes with point and peak arrays applied along a 3D structure.
 
-Assumptions:
+**Assumptions:**
 - The top level collection of data is a `project`
 - A project is a series of `experiments` 
     - an `experiment` is a collection of results with a semantic meaning.
