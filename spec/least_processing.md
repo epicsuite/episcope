@@ -12,7 +12,9 @@ Assumptions:
   by the points in the structure file.
 - Each chromosome's position in 3D space is in global coordinates. If two chromosomes are 
   loaded into the same dataset/view, they would be represented correctly relative to each other.
-
+- The `.narrowPeak` and `.bed` files will contain data for all chromosomes in the genome, but
+  the `structure.csv` will not necessarily contain all of those chromosomes. This means that the
+  `structure.csv` file will contain the list of possible chromosomes to be visualized.
 
 ## genome
 
