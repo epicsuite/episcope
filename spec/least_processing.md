@@ -13,8 +13,11 @@ Assumptions:
 - Each chromosome's position in 3D space is in global coordinates. If two chromosomes are 
   loaded into the same dataset/view, they would be represented correctly relative to each other.
 - The `.narrowPeak` and `.bed` files will contain data for all chromosomes in the genome, but
-  the `structure.csv` will not necessarily contain all of those chromosomes. This means that the
-  `structure.csv` file will contain the list of possible chromosomes to be visualized.
+  the `structure.csv` will not necessarily contain all of those chromosomes. If there is
+  not an entry for a chromosome in the `structure.csv` file, the data cannot be visualized.
+- The chromosome name in all files is not a *common name* (such as 'chromosome 21'),
+  but it can be mapped to a common name with the information in the `chromosomes.yaml` file.
+  The chromosome name is consistent across all files in a project.
 
 ## genome
 
