@@ -86,13 +86,14 @@ chromosome,id,x,y,z
 
 This file contains peak variable information for a single timestep for a single variable.
 
-This is the semantic meaning of the columns in this file:
+This is the semantic meaning of the columns in this file. The value for the `start_id` and
+`end_id` is zero, and the value at `mid_id` is `midpont_value`
 
 ```
-chromosome_name start_id end_id unused unused unused unused unused midpoint_value midpoint_id
+chromosome_name start_id end_id unused unused unused unused unused midpoint_value/10.0 midpoint_id
 ```
 
-This is the data type of the columns in this file:
+These are the data type of the columns in this file:
 
 ```
 <string> <int> <int> <string> <int> <string> <float> <float> <float> <float> <int>
@@ -121,6 +122,8 @@ have associated values. This is the semantic meaning of the columns in this file
 ```
 chromosome_name start_id end_id value
 ```
+
+These are the data types of the columns:
 
 ```
 <string> <int> <int> <float>
