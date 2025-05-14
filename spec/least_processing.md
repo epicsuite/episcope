@@ -84,7 +84,7 @@ chromosome,id,x,y,z
 ```
 
 
-## narrowPeak file specification
+## `.narrowPeak` file specification
 
 This file contains peak variable information for a single timestep for a single variable.
 
@@ -116,7 +116,7 @@ NC_023642.1  9474   9636 2803_001_autosomes_peak_8   14 . 2.88702 3.05827 1.4145
 NC_023642.1 16621  19699 2803_001_autosomes_peak_9a 429 . 18.7657 45.4897 42.9587 821
 ```
 
-## compartment.bed file specification
+## `compartment.bed` file specification
 
 This contains values defined along spans of the chromosome. The entire chromosome need not
 have associated values. This is the semantic meaning of the columns in this file:
