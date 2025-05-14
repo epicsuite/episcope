@@ -57,10 +57,11 @@ Semantically makes the *experiment* the top of the hierarchy.
 project/
     genes.csv                           important genes within the genome 
     chromosomes.yaml                    information about chromosomes
+    meta.yaml                           project metadata
     species.gff                         genomic information about the species
     experiment_001/
         meta.yaml                       experiment metadata
-        001/                            timestep
+        001/                            timestep (the same across all experiments)
             meta.yaml                   timestep metadata
             structure.csv               structure
             trackname_001.narrowPeak    peak variable file (one or more of these)
@@ -70,6 +71,16 @@ project/
     experiment_002/
     ...
     experiment_nnn/
+```
+
+## project `meta.yaml` file
+
+This includes metadata about the experiment.
+
+```
+timestep:
+    units: <string>         a string showing the units of the timesteps
+    <string>: <string>      one entry for each subdirectory under each experiment
 ```
 
 ## structure file specification
