@@ -102,7 +102,7 @@ timesteps:
             name: 003
             value: 24
 tracks: 
-    peak: [autosomes]
+    peak: [ATAC]
     point: [compartment]
     
 ```
@@ -114,14 +114,18 @@ tracks:
 
 ## individual experiment `meta.yaml` file
 
+
 ```
+sample: Untreated
+replicate: A
+desc: Untreated, mock infection control sample in VERO cell line 
 ```
 
 ## timestep `meta.yaml` file
 
 ```
 tracks:
-    autosomes:
+    ATAC:
         - time_001/Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
         - time_002/Untr_A_18HPI_2803_003_autosomes_peaks.narrowPeak
         - time_003/Untr_A_24HPI_2803_005_autosomes_peaks.narrowPeak
