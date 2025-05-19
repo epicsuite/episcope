@@ -82,6 +82,9 @@ Notes:
 - defining timesteps here means all experiments have the same timesteps. If it
   makes sense, this could be defined lower, but that would mean that only 
   certain sets of data could be compared, and they would have to be verified.
+  Timesteps must be present.
+- defining `tracks` means the same thing. Tracks could be missing without
+  breaking the analysis/vis.
 
 ```
 timesteps:
