@@ -55,21 +55,19 @@ Semantically makes the *experiment* the top of the hierarchy.
 
 ```
 project/
-    genes.csv                                   important genes within the genome 
-    chromosomes.yaml                            information about chromosomes
-    meta.yaml                                   project metadata (timesteps and values, tracks)
-    species.gff                                 genomic information about the species
-    experiments/
+    genes.csv                               important genes within the genome 
+    chromosomes.yaml                        information about chromosomes
+    meta.yaml                               project metadata (timesteps and values, tracks)
+    species.gff                             genomic information about the species
+    experiments/                            
         Untr_A/
-            meta.yaml                           experiment metadata
-            time/                               could be called a collection?
-                meta.yaml                       time metadata
-                001/                            timestep (the same across all experiments)
-                    meta.yaml                   timestep metadata (variable name->file)
-                    structure.csv               structure
-                    trackname_001.narrowPeak    peak variable file (one or more of these)
-                    ...
-                    compartment.bed             compartment variable file (only one of these)
+            meta.yaml                       experiment metadata
+            001/                            timestep (the same across all experiments)
+                meta.yaml                   timestep metadata (variable name->file)
+                structure.csv               structure
+                trackname_001.narrowPeak    peak variable file (one or more of these)
+                ...
+                compartment.bed             compartment variable file (only one of these)
         Untr_B/
         Vacv_A/
         Vacv_B/
