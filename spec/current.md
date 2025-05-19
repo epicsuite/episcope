@@ -60,10 +60,10 @@ project/
     meta.yaml                               project metadata (timesteps and values, tracks)
     species.gff                             genomic information about the species
     experiments/                            
+        meta.yaml
         Untr_A/
             meta.yaml                       experiment metadata
             12HPI/                          timestep (the same across all experiments)
-                meta.yaml                   timestep metadata (variable name->file)
                 structure.csv               structure
                 trackname_001.narrowPeak    peak variable file (one or more of these)
                 ...
@@ -89,29 +89,30 @@ Notes:
   breaking the analysis/vis.
 
 ```
-timesteps:
-    units:
-        abbreviation: hpi
-        full: "hours post infection"
-    values:
-        - 
-            name: 001
-            value: 12
-        - 
-            name: 002
-            value: 18
-        - 
-            name: 003
-            value: 24
-tracks: 
-    peak: [ATAC]
-    point: [compartment]
-    
 ```
 
 ## experiments `meta.yaml` file
 
 ```
+timesteps:
+    units:
+        abbreviation: hpi
+        full: "hours post infection"
+    values:
+        -
+            name: 12hpi
+            value: 12
+        -
+            name: 18hpi
+            value: 18
+        -
+            name: 24hpi
+            value: 24
+tracks:
+    peak:
+        - ATAC
+    point:
+        - compartment
 ```
 
 ## individual experiment `meta.yaml` file
@@ -121,11 +122,6 @@ tracks:
 sample: Untreated
 replicate: A
 desc: Untreated, mock infection control sample in VERO cell line 
-```
-
-## timestep `meta.yaml` file
-
-```
 tracks:
     ATAC:
         - time_001/Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
