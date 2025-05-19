@@ -105,7 +105,7 @@ tracks:
 ```
 ```
 
-## time `meta.yaml` file
+## timestep `meta.yaml` file
 
 ```
 tracks:
