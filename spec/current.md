@@ -61,6 +61,7 @@ project/
     species.gff                                 genomic information about the species
     experiments/
         Untr_A/
+            meta.yaml                           experiment metadata
             time/                               could be called a collection?
                 meta.yaml                       time metadata
                 001/                            timestep (the same across all experiments)
