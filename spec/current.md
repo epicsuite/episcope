@@ -57,7 +57,7 @@ Semantically makes the *experiment* the top of the hierarchy.
 project/
     genes.csv                                   important genes within the genome 
     chromosomes.yaml                            information about chromosomes
-    meta.yaml                                   project metadata (timesteps and values, variables)
+    meta.yaml                                   project metadata (timesteps and values, tracks)
     species.gff                                 genomic information about the species
     experiments/
         Untr_A/
@@ -94,7 +94,7 @@ timesteps:
         - 
             name: 003
             value: 24
-variables: 
+tracks: 
     peak: [autosomes]
     point: [compartment]
     
