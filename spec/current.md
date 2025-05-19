@@ -135,10 +135,10 @@ tracks:
         - time_001/Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
         - time_002/Untr_A_18HPI_2803_021_compartment_scores_100kb.bed
         - time_003/Untr_A_24HPI_2803_025_compartment_scores_100kb.bed
-    structure:
-        - time_001/Untr_A_12HPI_2803_019_juiced_30.csv
-        - time_002/Untr_A_18HPI_2803_021_juiced_30.csv
-        - time_003/Untr_A_24HPI_2803_025_juiced_30.csv
+structure:
+    - time_001/Untr_A_12HPI_2803_019_juiced_30.csv
+    - time_002/Untr_A_18HPI_2803_021_juiced_30.csv
+    - time_003/Untr_A_24HPI_2803_025_juiced_30.csv
 ```
 
 
