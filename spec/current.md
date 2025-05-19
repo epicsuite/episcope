@@ -78,6 +78,11 @@ project/
 
 This includes metadata about the experiment.
 
+Notes:
+- defining timesteps here means all experiments have the same timesteps. If it
+  makes sense, this could be defined lower, but that would mean that only 
+  certain sets of data could be compared, and they would have to be verified.
+
 ```
 timesteps:
     units:
