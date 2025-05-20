@@ -85,8 +85,11 @@ This includes metadata about the experiment.
 
 ## experiments `meta.yaml` file
 
-This defines time units, timestep values, and track names. There is **always** a file
-that maps to `structure`, so this is not expressed in the track data.
+This defines time units, timestep values, and track names. Note that all timesteps and tracks
+needn't be present in all experiments, but there will not be a timestep or a track that is
+not in this list.
+
+There is **always** a file that maps to `structure`, so this is not expressed in the track data.
 
 ```
 timesteps:
