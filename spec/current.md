@@ -63,13 +63,13 @@ project/
         meta.yaml
         Untr_A/
             meta.yaml                       experiment metadata
-            12HPI/                          timestep (the same across all experiments)
+            12hpi/                          timestep (the same across all experiments)
                 structure.csv               structure
                 trackname_001.narrowPeak    peak variable file (one or more of these)
                 ...
                 compartment.bed             compartment variable file (only one of these)
-            18HPI/                          timestep (the same across all experiments)
-            24HPI/                          timestep (the same across all experiments)
+            18hpi/                          timestep (the same across all experiments)
+            24hpi/                          timestep (the same across all experiments)
         Untr_B/
         Vacv_A/
         Vacv_B/
