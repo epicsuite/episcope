@@ -5,9 +5,14 @@ data as a collection of chromosomes with point and peak arrays applied along a 3
 
 **Assumptions:**
 - The top level collection of data is a `project`
-- A project is a series of `experiments` 
-    - an `experiment` is a collection of results with a semantic meaning.
-- All data within a project has the same chromosomes, experiments, timesteps and arrays.
+    - A project is a series of `experiments` 
+    - An `experiment` is a collection of results with a semantic meaning.
+    - There is a list of tracks and timesteps for the experiments. All tracks
+      and timesteps need not be present in all experiments, but there will not
+      be a track or a timestep that is not present in the lists of tracks and
+      timesteps.
+    - Every experiment must have data for a `structure` array. This is required, and
+      is not in the list of tracks (above)      
 - The chromosome structure will be represented in 3D space as a smooth curve constrained 
   by the points in the structure file.
 - Each chromosome's position in 3D space is in global coordinates. If two chromosomes are 
