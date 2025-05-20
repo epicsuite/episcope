@@ -80,34 +80,22 @@ project/
 
 This includes metadata about the experiment.
 
-Notes:
-- defining timesteps here means all experiments have the same timesteps. If it
-  makes sense, this could be defined lower, but that would mean that only 
-  certain sets of data could be compared, and they would have to be verified.
-  Timesteps must be present.
-- defining `tracks` means the same thing. Tracks could be missing without
-  breaking the analysis/vis.
-
 ```
 ```
 
 ## experiments `meta.yaml` file
 
+This defines time units, timestep values, and track names. There is **always** a file
+that maps to `structure`, so this is not expressed in the track data.
+
 ```
 timesteps:
-    units:
-        abbreviation: hpi
-        full: "hours post infection"
+    units: hpi
+    desc: "hours post infection"
     values:
-        -
-            name: 12hpi
-            value: 12
-        -
-            name: 18hpi
-            value: 18
-        -
-            name: 24hpi
-            value: 24
+        12hpi: 12
+        18hpi: 18
+        24hpi: 24
 tracks:
     peak:
         - ATAC
@@ -117,28 +105,22 @@ tracks:
 
 ## individual experiment `meta.yaml` file
 
-
 ```
 sample: Untreated
 replicate: A
 desc: Untreated, mock infection control sample in VERO cell line 
-tracks:
-    ATAC:
-        - time_001/Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
-        - time_002/Untr_A_18HPI_2803_003_autosomes_peaks.narrowPeak
-        - time_003/Untr_A_24HPI_2803_005_autosomes_peaks.narrowPeak
-    compartment:
-        - time_001/Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
-        - time_002/Untr_A_18HPI_2803_021_compartment_scores_100kb.bed
-        - time_003/Untr_A_24HPI_2803_025_compartment_scores_100kb.bed
-structure:
-    - time_001/Untr_A_12HPI_2803_019_juiced_30.csv
-    - time_002/Untr_A_18HPI_2803_021_juiced_30.csv
-    - time_003/Untr_A_24HPI_2803_025_juiced_30.csv
 ```
 
+## timestep `meta.yaml` file
 
-This includes metadata about the experiment.
+This maps track names to the files in the directory
+
+```
+tracks:
+    - ATAC: Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
+    - compartment: Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
+structure: Untr_A_12HPI_2803_019_juiced_30.csv
+```
 
 ## structure file specification
 
