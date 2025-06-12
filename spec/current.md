@@ -111,9 +111,9 @@ This maps track names and types to files in the directory
 ```
 tracks:
     peak:
-        - ATAC: Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
+        ATAC: Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
     point:
-        - compartment: Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
+        compartment: Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
 structure: Untr_A_12HPI_2803_019_juiced_30.csv
 ```
 
