@@ -60,10 +60,8 @@ Semantically makes the *experiment* the top of the hierarchy.
 
 ```
 project/
-    genes.csv                               important genes within the genome 
-    chromosomes.yaml                        information about chromosomes
+    <some name>_autosomes.tsv               list of chromosomes and their lengths 
     meta.yaml                               project metadata (timesteps and values, tracks)
-    species.gff                             genomic information about the species
     experiments/                            
         meta.yaml
         Untr_A/
@@ -90,25 +88,12 @@ This includes metadata about the experiment.
 
 ## experiments `meta.yaml` file
 
-This defines time units, timestep values, and track names. Note that all timesteps and tracks
-needn't be present in all experiments, but there will not be a timestep or a track that is
-not in this list.
-
-There is **always** a file that maps to `structure`, so this is not expressed in the track data.
+This defines a list of chromosomes that will be in all structure files. We note that this is a 
+subset of the list of chromosomes in the `<some name>_autosomes.tsv` file
 
 ```
-timesteps:
-    units: hpi
-    desc: "hours post infection"
-    values:
-        12hpi: 12
-        18hpi: 18
-        24hpi: 24
-tracks:
-    peak:
-        - ATAC
-    point:
-        - compartment
+structure:
+    chromosomes: [<name>, <name>, ...]
 ```
 
 ## individual experiment `meta.yaml` file
@@ -121,12 +106,14 @@ desc: Untreated, mock infection control sample in VERO cell line
 
 ## timestep `meta.yaml` file
 
-This maps track names to the files in the directory
+This maps track names and types to files in the directory 
 
 ```
 tracks:
-    - ATAC: Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
-    - compartment: Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
+    peak:
+        - ATAC: Untr_A_12HPI_2803_001_autosomes_peaks.narrowPeak
+    point:
+        - compartment: Untr_A_12HPI_2803_019_compartment_scores_100kb.bed
 structure: Untr_A_12HPI_2803_019_juiced_30.csv
 ```
 
@@ -149,12 +136,11 @@ chromosome,id,x,y,z
 This file contains peak variable information for a single timestep for a single variable.
 The name of the file is the name of the variable.
 
-This is the semantic meaning of the columns in this file. The value for the `start_id` and
-`end_id` is zero, and the value at `mid_id` is `midpont_value` (note that the value in this
-column is 1/10.0 the midpoint_value):
+This is the semantic meaning of the columns in this file. The value for the `start_position` and
+`end_position` is zero, and the value at `<relative summit position>` is `<summit score>`
 
 ```
-chromosome_name start_id end_id unused unused unused unused unused midpoint_value/10.0 midpoint_id
+chromosome_name start_position end_position unused <summit score> unused unused unused unused <relative summit position (to peak start)> 
 ```
 
 These are the data type of the columns in this file:
@@ -184,7 +170,7 @@ This contains values defined along spans of the chromosome. The entire chromosom
 have associated values. This is the semantic meaning of the columns in this file:
 
 ```
-chromosome_name start_id end_id value
+chromosome_name start_position end_position value
 ```
 
 These are the data types of the columns:
