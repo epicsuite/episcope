@@ -4,8 +4,8 @@ This specification captures the data files and semantic hierarchy for representi
 data as a collection of chromosomes with point and peak arrays applied along a 3D structure.
 
 **Assumptions:**
-- The top level collection of data is a `project`
-    - A project is a series of `experiments` 
+- The top level collection of data is a `ensemble`
+    - A ensemble is a series of `experiments` 
     - An `experiment` is a collection of results with a semantic meaning.
     - There is a list of tracks and timesteps for the experiments. All tracks
       and timesteps need not be present in all experiments, but there will not
@@ -22,7 +22,7 @@ data as a collection of chromosomes with point and peak arrays applied along a 3
   not an entry for a chromosome in the `structure.csv` file, the data cannot be visualized.
 - The chromosome name in all files is not a *common name* (such as 'chromosome 21'),
   but it can be mapped to a common name with the information in the `chromosomes.yaml` file.
-  The chromosome name is consistent across all files in a project.
+  The chromosome name is consistent across all files in a ensemble.
 
 ## genome
 
@@ -39,13 +39,13 @@ The IDs of a genome is a 1-based sequence of numbers.
 A chromosome is a linear sequence of `n` base pairs in a genome. it is uniquely identified
 by a begin and end ID along the genome sequence.
 
-A `project` need not contain all possible chromosomes for a genome. However, all structure
+A `ensemble` need not contain all possible chromosomes for a genome. However, all structure
 and track files will contain the same set of chromosomes.
 
 In general the name of a chromosome in these files will be a *terrible name* string that 
 is not readily associated with the common name (chromosome 12, etc.) of a chromosome. The 
 mapping of the *terrible name* to a common name can be found in the `chromosomes.yaml` file
-at the top of the project hierarchy.
+at the top of the ensemble hierarchy.
 
 
 ## ID
@@ -54,15 +54,15 @@ In all contexts, an `ID` is a one-based integer that is the position of a base p
 the genome. A chromosome has a [begin, end] pair that identifies its place along the
 genome. A variable has `ID` values that also reference the genome. 
 
-## project data hierarchy 
+## ensemble data hierarchy 
 
 Semantically makes the *experiment* the top of the hierarchy.
 
 ```
-project/
+ensemble/
     <some name>_autosomes.tsv               list of chromosomes and their lengths 
-    license.md                              license file for the project (no required format) 
-    meta.yaml                               project metadata (timesteps and values, tracks)
+    license.md                              license file for the ensemble (no required format) 
+    meta.yaml                               ensemble metadata (timesteps and values, tracks)
     experiments/                            
         meta.yaml
         Untr_A/
@@ -80,9 +80,9 @@ project/
         ...
 ```
 
-## project `meta.yaml` file
+## ensemble `meta.yaml` file
 
-This includes metadata about the project.
+This includes metadata about the ensemble.
 
 ```
 description:
@@ -91,8 +91,8 @@ description:
     citations: [a list of citations which may be referenced in the description]
 
 release
-    date: release date of the project
-    time: release time of the project
+    date: release date of the ensemble
+    time: release time of the ensemble
 
 hierarchy:
     version: version string for this hierarchy
