@@ -56,8 +56,6 @@ genome. A variable has `ID` values that also reference the genome.
 
 ## ensemble data hierarchy 
 
-Semantically makes the *experiment* the top of the hierarchy.
-
 ```
 ensemble/
     <some name>_autosomes.tsv               list of chromosomes and their lengths 
