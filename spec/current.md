@@ -1,4 +1,4 @@
-# Data specification
+# Data specification, v1.1
 
 This specification captures the data files and semantic hierarchy for representing genomics 
 data as a collection of chromosomes with point and peak arrays applied along a 3D structure.
