@@ -61,6 +61,7 @@ Semantically makes the *experiment* the top of the hierarchy.
 ```
 project/
     <some name>_autosomes.tsv               list of chromosomes and their lengths 
+    license.md                              license file for the project (no required format) 
     meta.yaml                               project metadata (timesteps and values, tracks)
     experiments/                            
         meta.yaml
@@ -81,9 +82,20 @@ project/
 
 ## project `meta.yaml` file
 
-This includes metadata about the experiment.
+This includes metadata about the project.
 
 ```
+description:
+    title: some title for the dataset
+    desc: a longer description for the dataset
+    citations: [a list of citations which may be referenced in the description]
+
+release
+    date: release date of the project
+    time: release time of the project
+
+hierarchy:
+    version: version string for this hierarchy
 ```
 
 ## experiments `meta.yaml` file
