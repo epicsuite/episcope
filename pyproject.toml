@@ -1,0 +1,19 @@
+# pyproject.toml
+[build-system]
+# If your project needs other packages to build properly, add them to this list.
+requires = ["setuptools >= 42.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "episcope" 
+version = "0.1.0"
+description = "A visualization tool for 4D genomics datasets"
+requires-python = ">=3.10"
+dependencies = [
+    "build",
+    "pyyaml",
+    "setuptools"
+]
+
+[tool.setuptools]
+packages = ["episcope"]
