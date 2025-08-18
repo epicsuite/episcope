@@ -1,6 +1,11 @@
 # episcope
 A tool for exploration of epigenetic datasets
 
+|![application](doc/img/episcope.png)|
+| ---- |
+|*Screen capture of the episcope tool, showing visualizations of four chromosomes from an experiment.*|
+
+
 ## Prerequisites
 - A recent (5.13+) version of ParaView
 
