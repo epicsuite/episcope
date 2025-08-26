@@ -38,6 +38,10 @@ class App:
         self.context.plot_figures = [None] * N_QUADRANTS_2D
         self.context.quadrants = {}
 
+        simple.LoadPalette(paletteName="NeutralGrayBackground")
+        palette = simple.GetSettingsProxy('ColorPalette')
+        palette.Background = [0.784314, 0.784314, 0.784314]
+
         quadrants_3d = {}
 
         for i in range(N_QUADRANTS_3D):
