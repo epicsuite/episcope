@@ -1,7 +1,8 @@
-from typing import Optional
+from __future__ import annotations
 
 from episcope.library.io import BaseSourceProvider
 from episcope.library.io.v1_1.ensemble import Ensemble
+
 
 class SourceProvider(BaseSourceProvider):
     def __init__(self, ensemble: Ensemble):
@@ -9,8 +10,8 @@ class SourceProvider(BaseSourceProvider):
 
     def get_chromosomes(
         self,
-        experiment: Optional[str] = None,
-        timestep: Optional[str] = None,
+        experiment: str | None = None,
+        timestep: str | None = None,
     ) -> set[str]:
         chromosomes = set()
 
@@ -22,15 +23,15 @@ class SourceProvider(BaseSourceProvider):
                 if timestep is not None and _timestep_name != timestep:
                     continue
 
-                for _chromosome in _timestep._structures.keys():
+                for _chromosome in _timestep._structures:
                     chromosomes.add(_chromosome)
 
         return chromosomes
 
     def get_experiments(
         self,
-        chromosome: Optional[str] = None,
-        timestep: Optional[str] = None,
+        chromosome: str | None = None,
+        timestep: str | None = None,
     ) -> set[str]:
         experiments = set()
 
@@ -41,7 +42,7 @@ class SourceProvider(BaseSourceProvider):
                 if timestep is not None and _timestep_name != timestep:
                     continue
 
-                for _chromosome_name in _timestep._structures.keys():
+                for _chromosome_name in _timestep._structures:
                     if chromosome is not None and _chromosome_name != chromosome:
                         continue
 
@@ -54,9 +55,8 @@ class SourceProvider(BaseSourceProvider):
 
     def get_timesteps(
         self,
-        chromosome: Optional[str] = None,
-        experiment: Optional[str] = None,
-
+        chromosome: str | None = None,
+        experiment: str | None = None,
     ) -> set[str]:
         experiments = set()
 
@@ -67,7 +67,7 @@ class SourceProvider(BaseSourceProvider):
             for _timestep_name, _timestep in _experiment._timesteps.items():
                 add_timestep = False
 
-                for _chromosome_name in _timestep._structures.keys():
+                for _chromosome_name in _timestep._structures:
                     if chromosome is not None and _chromosome_name != chromosome:
                         continue
 

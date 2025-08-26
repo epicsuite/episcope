@@ -1,18 +1,16 @@
-from typing import TypedDict
+from __future__ import annotations
 
 from paraview import simple
-
-from episcope.library.io import PointTrackPoint, PeakTrackPoint
-from episcope.library.viz.common import CardinalSplines
-from vtkmodules.vtkCommonCore import vtkPoints, vtkFloatArray
-from vtkmodules.vtkCommonExecutionModel import vtkAlgorithm
-from vtkmodules.vtkCommonDataModel import vtkPolyData, vtkCellArray, vtkPolyLine
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
+from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData, vtkPolyLine
 from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
+
+from episcope.library.io import PeakTrackPoint, PointTrackPoint
+from episcope.library.viz.common import CardinalSplines
 
 
 class DataSource:
-    """Abstract base class for a datasource of the visualization pipeline.
-    """
+    """Abstract base class for a datasource of the visualization pipeline."""
 
     @property
     def output(self):
@@ -20,7 +18,7 @@ class DataSource:
 
         Returns:
             The output data object that can be used for visualization.
-            
+
         Raises:
             NotImplementedError: This is an abstract method that must be
                 implemented by subclasses.
@@ -74,13 +72,13 @@ class StructureSource(DataSource):
             RuntimeError: If splines have not been set before calling this method.
         """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
         line = vtkPolyLine()
         cells = vtkCellArray()
-        pointdata = polydata.GetPointData()
 
         if max_distance <= 0 or len(data) < 2:
             indices = data
@@ -100,7 +98,14 @@ class StructureSource(DataSource):
         z_spline = self._splines["z"]
 
         for i, index in enumerate(indices):
-            points.SetPoint(i, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            points.SetPoint(
+                i,
+                (
+                    x_spline.Evaluate(index),
+                    y_spline.Evaluate(index),
+                    z_spline.Evaluate(index),
+                ),
+            )
             line.GetPointIds().SetId(i, i)
 
         cells.InsertNextCell(line)
@@ -158,7 +163,8 @@ class PeakTrackSource(DataSource):
             RuntimeError: If splines have not been set before calling this method.
         """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -172,11 +178,13 @@ class PeakTrackSource(DataSource):
         if max_distance <= 0:
             for peak_point in data:
                 n_points += 3
-                interpolated_data.append([
-                    (peak_point["start"], 0),
-                    (peak_point["summit"], peak_point["value"]),
-                    (peak_point["end"], 0),
-                ])
+                interpolated_data.append(
+                    [
+                        (peak_point["start"], 0),
+                        (peak_point["summit"], peak_point["value"]),
+                        (peak_point["end"], 0),
+                    ]
+                )
         else:
             pass
 
@@ -193,8 +201,15 @@ class PeakTrackSource(DataSource):
 
         for segment in interpolated_data:
             cells.InsertNextCell(len(segment))
-            for i, (index, value) in enumerate(segment):
-                points.SetPoint(point_id, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            for index, value in segment:
+                points.SetPoint(
+                    point_id,
+                    (
+                        x_spline.Evaluate(index),
+                        y_spline.Evaluate(index),
+                        z_spline.Evaluate(index),
+                    ),
+                )
                 cells.InsertCellPoint(point_id)
                 array.SetTuple1(point_id, value)
 
@@ -253,7 +268,8 @@ class PointTrackSource(DataSource):
             RuntimeError: If splines have not been set before calling this method.
         """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -267,10 +283,12 @@ class PointTrackSource(DataSource):
         if max_distance <= 0:
             for track_point in data:
                 n_points += 2
-                interpolated_data.append([
-                    (track_point["start"], track_point["value"]),
-                    (track_point["end"], track_point["value"]),
-                ])
+                interpolated_data.append(
+                    [
+                        (track_point["start"], track_point["value"]),
+                        (track_point["end"], track_point["value"]),
+                    ]
+                )
         else:
             for track_point in data:
                 index = track_point["start"]
@@ -297,8 +315,15 @@ class PointTrackSource(DataSource):
         # cells.InsertNextCell(n_points)
         for segment in interpolated_data:
             cells.InsertNextCell(len(segment))
-            for i, (index, value) in enumerate(segment):
-                points.SetPoint(point_id, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            for index, value in segment:
+                points.SetPoint(
+                    point_id,
+                    (
+                        x_spline.Evaluate(index),
+                        y_spline.Evaluate(index),
+                        z_spline.Evaluate(index),
+                    ),
+                )
                 cells.InsertCellPoint(point_id)
                 array.SetTuple1(point_id, value)
 

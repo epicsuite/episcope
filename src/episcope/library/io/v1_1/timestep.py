@@ -1,18 +1,22 @@
+from __future__ import annotations
+
+import csv
 from pathlib import Path
 from typing import TypedDict
+
 import yaml
-import csv
 
-from episcope.library.io import StructurePoint, PeakTrackPoint, PointTrackPoint
+from episcope.library.io import PeakTrackPoint, PointTrackPoint, StructurePoint
 
-_TimestepMetaTracks = TypedDict("_TimestepMetaTracks", {
-    "peak": dict[str, str],
-    "point": dict[str, str]
-})
-TimestepMeta = TypedDict("TimestepMeta", {
-    "tracks": _TimestepMetaTracks,
-    "structure": str
-})
+
+class _TimestepMetaTracks(TypedDict):
+    peak: dict[str, str]
+    point: dict[str, str]
+
+
+class TimestepMeta(TypedDict):
+    tracks: _TimestepMetaTracks
+    structure: str
 
 
 class StructureColumns:
@@ -23,6 +27,7 @@ class StructureColumns:
     Y = 3
     Z = 4
 
+
 class PeakTrackColumns:
     N_COLUMNS = 10
     CHROMOSOME = 0
@@ -30,6 +35,7 @@ class PeakTrackColumns:
     END = 2
     VALUE = 4
     SUMMIT = 9
+
 
 class PointTrackColumns:
     N_COLUMNS = 4
@@ -52,10 +58,13 @@ class Timestep:
         """
         self.directory_path: Path = Path(directory_path)
         if not self.directory_path.is_dir():
-            raise ValueError(f"The provided path '{directory_path}' is not a directory.")
+            msg = f"The provided path '{directory_path}' is not a directory."
+            raise ValueError(msg)
 
         self._meta = self._read_meta()
-        self._structures: dict[str, list[StructurePoint]] = self._read_structure(self._meta["structure"])
+        self._structures: dict[str, list[StructurePoint]] = self._read_structure(
+            self._meta["structure"]
+        )
         self._peak_tracks: dict[str, dict[str, list[PeakTrackPoint]]] = {}
         self._point_tracks: dict[str, dict[str, list[PointTrackPoint]]] = {}
 
@@ -74,23 +83,23 @@ class Timestep:
         Raises:
             FileNotFoundError: If 'meta.yaml' is not found in the directory.
         """
-        meta_yaml_path = self.directory_path / 'meta.yaml'
+        meta_yaml_path = self.directory_path / "meta.yaml"
         if not meta_yaml_path.exists():
-            raise FileNotFoundError("No 'meta.yaml' file found in the directory.")
-        
-        with meta_yaml_path.open('r') as file:
-            meta_content = yaml.safe_load(file)
-        
-        return meta_content
+            msg = "No 'meta.yaml' file found in the directory."
+            raise FileNotFoundError(msg)
+
+        with meta_yaml_path.open("r") as file:
+            return yaml.safe_load(file)
 
     def _read_structure(self, path: Path):
         structure_path = self.directory_path / path
         if not structure_path.exists():
-            raise FileNotFoundError(f"No structure file found in the directory: {path}")
+            msg = f"No structure file found in the directory: {path}"
+            raise FileNotFoundError(msg)
 
         chromosome_structures: dict[str, list[StructurePoint]] = {}
 
-        with structure_path.open('r') as file:
+        with structure_path.open("r") as file:
             structure_reader = csv.reader(file)
 
             # skip header line
@@ -107,21 +116,24 @@ class Timestep:
 
                 structure = chromosome_structures.setdefault(chromosome, [])
 
-                structure.append({
-                    "index": index,
-                    "position": (x, y, z),
-                })
+                structure.append(
+                    {
+                        "index": index,
+                        "position": (x, y, z),
+                    }
+                )
 
         return chromosome_structures
 
     def _read_peak_track(self, path: Path):
         track_path = self.directory_path / path
         if not track_path.exists():
-            raise FileNotFoundError(f"No peak file found in the directory: {path}")
+            msg = f"No peak file found in the directory: {path}"
+            raise FileNotFoundError(msg)
 
         chromosome_track: dict[str, list[PeakTrackPoint]] = {}
 
-        with track_path.open('r') as file:
+        with track_path.open("r") as file:
             track_reader = csv.reader(file, delimiter="\t")
 
             for line in track_reader:
@@ -135,23 +147,26 @@ class Timestep:
 
                 track = chromosome_track.setdefault(chromosome, [])
 
-                track.append({
-                    "start": start,
-                    "end": end,
-                    "summit": summit,
-                    "value": value,
-                })
+                track.append(
+                    {
+                        "start": start,
+                        "end": end,
+                        "summit": summit,
+                        "value": value,
+                    }
+                )
 
         return chromosome_track
 
     def _read_point_track(self, path: Path):
         track_path = self.directory_path / path
         if not track_path.exists():
-            raise FileNotFoundError(f"No point file found in the directory: {path}")
+            msg = f"No point file found in the directory: {path}"
+            raise FileNotFoundError(msg)
 
         chromosome_track: dict[str, list[PointTrackPoint]] = {}
 
-        with track_path.open('r') as file:
+        with track_path.open("r") as file:
             track_reader = csv.reader(file, delimiter="\t")
 
             for line in track_reader:
@@ -167,10 +182,12 @@ class Timestep:
 
                 track = chromosome_track.setdefault(chromosome, [])
 
-                track.append({
-                    "start": start,
-                    "end": end,
-                    "value": value,
-                })
+                track.append(
+                    {
+                        "start": start,
+                        "end": end,
+                        "value": value,
+                    }
+                )
 
         return chromosome_track

@@ -1,6 +1,8 @@
-from typing import Optional, TypedDict
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TypedDict
+
 
 class StructurePoint(TypedDict):
     """A typed dictionary representing a point in 3D space on a chromosome.
@@ -9,6 +11,7 @@ class StructurePoint(TypedDict):
         index: The base pair index of the point along the chromosome.
         position: The 3D coordinates (x, y, z) of the point.
     """
+
     index: int
     position: tuple[float, float, float]
 
@@ -22,6 +25,7 @@ class PeakTrackPoint(TypedDict):
         summit: The base pair position at the peak.
         value: The scalar value at the peak.
     """
+
     start: int
     end: int
     summit: int
@@ -36,6 +40,7 @@ class PointTrackPoint(TypedDict):
         end: The end base pair position of the point.
         value: The scalar value of the point.
     """
+
     start: int
     end: int
     value: float
@@ -51,8 +56,8 @@ class BaseSourceProvider(ABC):
     @abstractmethod
     def get_chromosomes(
         self,
-        experiment: Optional[str] = None,
-        timestep: Optional[str] = None,
+        experiment: str | None = None,
+        timestep: str | None = None,
     ) -> set[str]:
         """Get the set of chromosomes available for the given experiment and timestep.
 
@@ -68,8 +73,8 @@ class BaseSourceProvider(ABC):
     @abstractmethod
     def get_experiments(
         self,
-        chromosome: Optional[str] = None,
-        timestep: Optional[str] = None,
+        chromosome: str | None = None,
+        timestep: str | None = None,
     ) -> set[str]:
         """Get the set of experiments available for the given chromosome and timestep.
 
@@ -85,8 +90,8 @@ class BaseSourceProvider(ABC):
     @abstractmethod
     def get_timesteps(
         self,
-        chromosome: Optional[str] = None,
-        experiment: Optional[str] = None,
+        chromosome: str | None = None,
+        experiment: str | None = None,
     ) -> set[str]:
         """Get the set of timesteps available for the given chromosome and experiment.
 
