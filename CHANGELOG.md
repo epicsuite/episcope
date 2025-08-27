@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.1.1 (2025-08-27)
+
+### Bug Fixes
+
+- **release**: Fix ci release
+  ([`39357b1`](https://github.com/epicsuite/episcope/commit/39357b15dfb4b0e4d7ecc55661dc28ce6330ad81))
+
+### Chores
+
+- **ci**: Fix ci ruff
+  ([`c9dd7f4`](https://github.com/epicsuite/episcope/commit/c9dd7f4a3a34870fea5ef2cdebbaddf9efbeee69))
+
+- **release**: Fix ci release
+  ([`1fa6d67`](https://github.com/epicsuite/episcope/commit/1fa6d672685280187247568369f64b0d52e7acce))
+
+
 ## v0.1.0 (2025-08-27)
 
 ### Chores
