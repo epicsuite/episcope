@@ -1,40 +1,84 @@
-from typing import TypedDict
+from __future__ import annotations
 
 from paraview import simple
-
-from episcope.library.io import PointTrackPoint, PeakTrackPoint
-from episcope.library.viz.common import CardinalSplines
-from vtkmodules.vtkCommonCore import vtkPoints, vtkFloatArray
-from vtkmodules.vtkCommonExecutionModel import vtkAlgorithm
-from vtkmodules.vtkCommonDataModel import vtkPolyData, vtkCellArray, vtkPolyLine
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
+from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData, vtkPolyLine
 from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
 
+from episcope.library.io import PeakTrackPoint, PointTrackPoint
+from episcope.library.viz.common import CardinalSplines
+
+
 class DataSource:
+    """Abstract base class for a datasource of the visualization pipeline."""
+
     @property
     def output(self):
+        """Get the output paraview filter for this data source.
+
+        Returns:
+            The output data object that can be used for visualization.
+
+        Raises:
+            NotImplementedError: This is an abstract method that must be
+                implemented by subclasses.
+        """
         raise NotImplementedError
 
+
 class StructureSource(DataSource):
+    """Data source for chromosome structure visualization.
+
+    This class handles the creation of 3D structure data from genomic coordinates
+    using cardinal splines for smooth curve representation.
+    """
+
     def __init__(self):
+        """Initialize the StructureSource with default values."""
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
 
     @property
     def output(self):
+        """Get the output VTK data object for the structure.
+
+        Returns:
+            The TrivialProducer containing the structure data as vtkPolyData.
+        """
         return self._output
 
     def set_splines(self, splines: CardinalSplines):
+        """Set the cardinal splines for 3D coordinate interpolation.
+
+        Args:
+            splines: A dictionary containing x, y, and z splines for coordinate
+                interpolation.
+        """
         self._splines = splines
 
     def set_data(self, data: list[int], max_distance: int):
+        """Set the structure data and generate VTK polydata for visualization.
+
+        This method processes genomic indices to create a smooth 3D curve representation
+        using cardinal splines. If max_distance is positive, it interpolates points
+        between consecutive indices.
+
+        Args:
+            data: A list of base pair indices representing the chromosome structure.
+            max_distance: The maximum distance between interpolated points. If <= 0,
+                no interpolation occurs and all original points are used.
+
+        Raises:
+            RuntimeError: If splines have not been set before calling this method.
+        """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
         line = vtkPolyLine()
         cells = vtkCellArray()
-        pointdata = polydata.GetPointData()
 
         if max_distance <= 0 or len(data) < 2:
             indices = data
@@ -54,7 +98,14 @@ class StructureSource(DataSource):
         z_spline = self._splines["z"]
 
         for i, index in enumerate(indices):
-            points.SetPoint(i, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            points.SetPoint(
+                i,
+                (
+                    x_spline.Evaluate(index),
+                    y_spline.Evaluate(index),
+                    z_spline.Evaluate(index),
+                ),
+            )
             line.GetPointIds().SetId(i, i)
 
         cells.InsertNextCell(line)
@@ -66,22 +117,54 @@ class StructureSource(DataSource):
         self._output.GetClientSideObject().SetOutput(polydata)
 
 
-
 class PeakTrackSource(DataSource):
+    """Data source for peak track visualization.
+
+    This class handles the creation of 3D peak track data from genomic coordinates
+    using cardinal splines for smooth curve representation.
+    """
+
     def __init__(self):
+        """Initialize the PeakTrackSource with default values."""
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
 
     @property
     def output(self):
+        """Get the output VTK data object for the peak track.
+
+        Returns:
+            The TrivialProducer containing the peak track data as vtkPolyData.
+        """
         return self._output
 
     def set_splines(self, splines: CardinalSplines):
+        """Set the cardinal splines for 3D coordinate interpolation.
+
+        Args:
+            splines: A dictionary containing x, y, and z splines for coordinate
+                interpolation.
+        """
         self._splines = splines
 
     def set_data(self, data: list[PeakTrackPoint], max_distance: int):
+        """Set the peak track data and generate VTK polydata for visualization.
+
+        This method processes peak track points to create a 3D representation
+        using cardinal splines. Each peak is represented as a triangle with
+        start point (0), summit point (with value), and end point (0).
+
+        Args:
+            data: A list of PeakTrackPoint objects containing peak information.
+            max_distance: The maximum distance between interpolated points. If <= 0,
+                no interpolation occurs and all original points are used.
+
+        Raises:
+            RuntimeError: If splines have not been set before calling this method.
+        """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -95,11 +178,13 @@ class PeakTrackSource(DataSource):
         if max_distance <= 0:
             for peak_point in data:
                 n_points += 3
-                interpolated_data.append([
-                    (peak_point["start"], 0),
-                    (peak_point["summit"], peak_point["value"]),
-                    (peak_point["end"], 0),
-                ])
+                interpolated_data.append(
+                    [
+                        (peak_point["start"], 0),
+                        (peak_point["summit"], peak_point["value"]),
+                        (peak_point["end"], 0),
+                    ]
+                )
         else:
             pass
 
@@ -116,8 +201,15 @@ class PeakTrackSource(DataSource):
 
         for segment in interpolated_data:
             cells.InsertNextCell(len(segment))
-            for i, (index, value) in enumerate(segment):
-                points.SetPoint(point_id, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            for index, value in segment:
+                points.SetPoint(
+                    point_id,
+                    (
+                        x_spline.Evaluate(index),
+                        y_spline.Evaluate(index),
+                        z_spline.Evaluate(index),
+                    ),
+                )
                 cells.InsertCellPoint(point_id)
                 array.SetTuple1(point_id, value)
 
@@ -131,20 +223,53 @@ class PeakTrackSource(DataSource):
 
 
 class PointTrackSource(DataSource):
+    """Data source for point track visualization.
+
+    This class handles the creation of 3D point track data from genomic coordinates
+    using cardinal splines for smooth curve representation.
+    """
+
     def __init__(self):
+        """Initialize the PointTrackSource with default values."""
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
 
     @property
     def output(self):
+        """Get the output VTK data object for the point track.
+
+        Returns:
+            The TrivialProducer containing the point track data as vtkPolyData.
+        """
         return self._output
 
     def set_splines(self, splines: CardinalSplines):
+        """Set the cardinal splines for 3D coordinate interpolation.
+
+        Args:
+            splines: A dictionary containing x, y, and z splines for coordinate
+                interpolation.
+        """
         self._splines = splines
 
     def set_data(self, data: list[PointTrackPoint], max_distance: int):
+        """Set the point track data and generate VTK polydata for visualization.
+
+        This method processes point track data to create a 3D representation
+        using cardinal splines. Points are interpolated between start and end
+        positions based on max_distance parameter.
+
+        Args:
+            data: A list of PointTrackPoint objects containing point track information.
+            max_distance: The maximum distance between interpolated points. If <= 0,
+                no interpolation occurs and only start/end points are used.
+
+        Raises:
+            RuntimeError: If splines have not been set before calling this method.
+        """
         if self._splines is None:
-            raise RuntimeError("splines should be set before setting source data.")
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -158,10 +283,12 @@ class PointTrackSource(DataSource):
         if max_distance <= 0:
             for track_point in data:
                 n_points += 2
-                interpolated_data.append([
-                    (track_point["start"], track_point["value"]),
-                    (track_point["end"], track_point["value"]),
-                ])
+                interpolated_data.append(
+                    [
+                        (track_point["start"], track_point["value"]),
+                        (track_point["end"], track_point["value"]),
+                    ]
+                )
         else:
             for track_point in data:
                 index = track_point["start"]
@@ -188,8 +315,15 @@ class PointTrackSource(DataSource):
         # cells.InsertNextCell(n_points)
         for segment in interpolated_data:
             cells.InsertNextCell(len(segment))
-            for i, (index, value) in enumerate(segment):
-                points.SetPoint(point_id, (x_spline.Evaluate(index), y_spline.Evaluate(index), z_spline.Evaluate(index)))
+            for index, value in segment:
+                points.SetPoint(
+                    point_id,
+                    (
+                        x_spline.Evaluate(index),
+                        y_spline.Evaluate(index),
+                        z_spline.Evaluate(index),
+                    ),
+                )
                 cells.InsertCellPoint(point_id)
                 array.SetTuple1(point_id, value)
 
@@ -205,52 +339,3 @@ class PointTrackSource(DataSource):
         writer.Write()
 
         self._output.GetClientSideObject().SetOutput(polydata)
-
-
-# class DataSource:
-#     """A class to handle data from a file source.
-
-#     Attributes:
-#         file_path (str): The path to the file that contains the data.
-#     """
-
-#     def __init__(self, file_path: str) -> None:
-#         """Initializes the DataSource with a file path.
-
-#         Args:
-#             file_path (str): The path to the file that contains the data.
-#         """
-#         self.file_path = file_path
-#         self._reader = simple.CSVReader(FileName=[file_path])
-#         self._points = simple.TableToPoints(Input=self._reader)
-#         self._points.XColumn = X_COLUMN
-#         self._points.YColumn = Y_COLUMN
-#         self._points.ZColumn = Z_COLUMN
-#         self._points.KeepAllDataArrays = 1
-#         self._interpolation_filter = simple.ProgrammableFilter(Input=self._points)
-#         self._interpolation_filter.Script = INTERPOLATION_FILTER_SOURCE
-#         self._interpolation_filter.RequestInformationScript = ''
-#         self._interpolation_filter.RequestUpdateExtentScript = ''
-#         self._interpolation_filter.PythonPath = ''
-
-#         self._variables: list[DataVariable] = []
-#         self._discover_variables()
-
-#     @property
-#     def output(self):
-#         return self._interpolation_filter
-
-#     @property
-#     def variables(self) -> list[DataVariable]:
-#         return self._variables
-
-#     def _discover_variables(self):
-#         self._variables = []
-#         for i in range(self._points.PointData.NumberOfArrays):
-#             array = self._points.PointData.GetArray(i)
-#             name = array.Name
-
-#             if name in ARRAY_NAMES_TO_IGNORE:
-#                 continue
-
-#             self._variables.append({"name": name, "label": name})

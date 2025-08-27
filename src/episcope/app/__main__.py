@@ -1,5 +1,4 @@
 from __future__ import annotations
-import paraview.web.venv
 
 from episcope.app.core import App
 

@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import TypedDict, Annotated, TypeAlias, Literal, Any
+from typing import Any, TypedDict
+
 from trame_server.state import State
 
 
@@ -7,12 +10,15 @@ class Representation(TypedDict):
     name: str
     parameters: dict[str, Any]
 
+
 class Track(TypedDict):
     name: str
     representation: Representation
 
+
 class Quadrant2D(TypedDict):
     pass
+
 
 class Quadrant3D(TypedDict):
     chromosome: str
@@ -20,10 +26,12 @@ class Quadrant3D(TypedDict):
     timestep: str
     tracks: dict[str, Track]
 
+
 @dataclass
 class EpiscopeStateAnnotation:
     quadrants_3d: dict[str, Quadrant3D]
     quadrants_2d: dict[str, Quadrant3D]
+
 
 class StateAdapterQuadrant3D:
     def __init__(self, state: State, quadrant_id: str):
@@ -37,7 +45,7 @@ class StateAdapterQuadrant3D:
     @property
     def chromosome(self):
         return self.state.__getattr__(self.chromosome_key)
-    
+
     @chromosome.setter
     def chromosome(self, value):
         self.state.__setattr__(self.chromosome_key, value)
@@ -80,15 +88,6 @@ class StateAdapterQuadrant3D:
 
 
 class EpiscopeState(State, EpiscopeStateAnnotation):
-
-    def __init__(self, *args, **kwargs):
-        raise RuntimeError("EpiscopeState is only used as a type hint helper, is not meant to be instantiated.")
-
-def quadrant3d_chromosome_key(i: int) -> str:
-    return f"quadrant3d_{i}_chromosome"
-
-def quadrant3d_experiment_key(i: int) -> str:
-    return f"quadrant3d_{i}_experiment"
-
-def quadrant3d_timestep_key(i: int) -> str:
-    return f"quadrant3d_{i}_timestep"
+    def __init__(self):
+        msg = "EpiscopeState is only used as a type hint helper, is not meant to be instantiated."
+        raise RuntimeError(msg)

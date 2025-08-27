@@ -1,12 +1,17 @@
-DATA_DIRECTORY = "/Users/alessandro.genova/work/sources/epicsuite/test_data/LA-UR-25-24911.1"
+from __future__ import annotations
+
+DATA_DIRECTORY = (
+    "/Users/alessandro.genova/work/sources/epicsuite/test_data/LA-UR-25-24911.1"
+)
+
 
 def test_viz():
-    import paraview.web.venv
     from paraview import simple
-    from episcope.library.io.v1_1.ensemble import Ensemble
-    from episcope.library.io.v1_1 import SourceProvider
+
+    from episcope.library.io.v1_2 import SourceProvider
+    from episcope.library.io.v1_2.ensemble import Ensemble
     from episcope.library.viz.visualization import Visualization
-    
+
     ensemble = Ensemble(DATA_DIRECTORY)
     source = SourceProvider(ensemble)
 
@@ -31,8 +36,10 @@ def test_viz():
 
     assert True
 
+
 def main():
     test_viz()
+
 
 if __name__ == "__main__":
     main()
