@@ -68,11 +68,12 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  # https://docs.pypi.org/trusted-publishers/using-a-publisher/
   release:
     needs: [pre-commit, checks]
-    name: Distribution build
+    name: Distribution build and publish to PyPI
     runs-on: ubuntu-latest
-    if: false && github.event_name == 'push' # Disabled for now
+    if: github.event_name == 'push'
     permissions:
       id-token: write
       attestations: write
@@ -99,5 +100,6 @@ jobs:
         with:
           subject-path: "dist/*"
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         if: steps.release.outputs.released == 'true'
