@@ -5,7 +5,7 @@ from typing import Any, TypedDict
 
 import yaml
 
-from episcope.library.io.v1_1.experiment import Experiment
+from episcope.library.io.v1_2.experiment import Experiment
 
 
 class _ExperimentsMetaStructure(TypedDict):

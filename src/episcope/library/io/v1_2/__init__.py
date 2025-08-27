@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from episcope.library.io import BaseSourceProvider
-from episcope.library.io.v1_1.ensemble import Ensemble
+from episcope.library.io.v1_2.ensemble import Ensemble
 
 
 class SourceProvider(BaseSourceProvider):

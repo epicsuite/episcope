@@ -6,7 +6,7 @@ DATA_DIRECTORY = (
 
 
 def test_ensemble():
-    from episcope.library.io.v1_1.ensemble import Ensemble
+    from episcope.library.io.v1_2.ensemble import Ensemble
 
     ensemble = Ensemble(DATA_DIRECTORY)
 

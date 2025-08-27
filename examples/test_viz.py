@@ -8,8 +8,8 @@ DATA_DIRECTORY = (
 def test_viz():
     from paraview import simple
 
-    from episcope.library.io.v1_1 import SourceProvider
-    from episcope.library.io.v1_1.ensemble import Ensemble
+    from episcope.library.io.v1_2 import SourceProvider
+    from episcope.library.io.v1_2.ensemble import Ensemble
     from episcope.library.viz.visualization import Visualization
 
     ensemble = Ensemble(DATA_DIRECTORY)

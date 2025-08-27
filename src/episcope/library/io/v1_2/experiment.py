@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import yaml
 
-from episcope.library.io.v1_1.timestep import Timestep
+from episcope.library.io.v1_2.timestep import Timestep
 
 
 class ExperimentMeta(TypedDict):

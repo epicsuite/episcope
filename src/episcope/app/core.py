@@ -14,7 +14,7 @@ from trame.widgets import paraview as pv_widgets
 from trame.widgets import vuetify3 as vuetify
 
 from episcope.app.state import EpiscopeState, StateAdapterQuadrant3D
-from episcope.library.io.v1_1 import Ensemble, SourceProvider
+from episcope.library.io.v1_2 import Ensemble, SourceProvider
 from episcope.library.viz.visualization import Visualization
 
 # Possibly make it dynamic in the future
@@ -123,39 +123,41 @@ class App:
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         # TODO: add dynamically
-        peak_track_name = next(
-            iter(
-                visualization._source.get_peak_tracks(
-                    quadrant.chromosome, quadrant.experiment, quadrant.timestep
+
+        try:
+            peak_track_name = next(
+                iter(
+                    visualization._source.get_peak_tracks(
+                        quadrant.chromosome, quadrant.experiment, quadrant.timestep
+                    )
                 )
             )
-        )
-        # peak_track_name = "ATAC"
-        point_track_name = next(
-            iter(
-                visualization._source.get_point_tracks(
-                    quadrant.chromosome, quadrant.experiment, quadrant.timestep
+
+            self.on_add_peak_track_display(quadrant_id, peak_track_name, "tube")
+            self.on_add_peak_track_plot(quadrant_id, peak_track_name)
+            figure.update_yaxes(title_text=peak_track_name, secondary_y=True)
+        except StopIteration:
+            pass
+
+        try:
+            point_track_name = next(
+                iter(
+                    visualization._source.get_point_tracks(
+                        quadrant.chromosome, quadrant.experiment, quadrant.timestep
+                    )
                 )
             )
-        )
-        # point_track_name = "compartment"
-        self.on_add_peak_track_display(quadrant_id, peak_track_name, "tube")
-        self.on_add_point_track_display(
-            quadrant_id, point_track_name, "upper_gaussian_contour"
-        )
-        self.on_add_point_track_display(
-            quadrant_id, point_track_name, "lower_gaussian_contour"
-        )
 
-        self.on_add_point_track_plot(quadrant_id, point_track_name)
-        self.on_add_peak_track_plot(quadrant_id, peak_track_name)
-
-        # Set x-axis title
-        # figure.update_xaxes(title_text="Base index")
-
-        # Set y-axes titles
-        figure.update_yaxes(title_text=point_track_name, secondary_y=False)
-        figure.update_yaxes(title_text=peak_track_name, secondary_y=True)
+            self.on_add_point_track_display(
+                quadrant_id, point_track_name, "upper_gaussian_contour"
+            )
+            self.on_add_point_track_display(
+                quadrant_id, point_track_name, "lower_gaussian_contour"
+            )
+            self.on_add_point_track_plot(quadrant_id, point_track_name)
+            figure.update_yaxes(title_text=point_track_name, secondary_y=False)
+        except StopIteration:
+            pass
 
         plot_widget = self.context.plot_views[quadrant_id]
         plot_widget.update(figure)
