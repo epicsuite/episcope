@@ -37,9 +37,11 @@ class App:
         known_args, _ = self.server.cli.parse_known_args()
         self.context.data_directory = known_args.data
 
+        self.context.reference_quadrant_id = None
         self.context.pv_views = [None] * N_QUADRANTS_3D
         self.context.render_views = [None] * N_QUADRANTS_3D
         self.context.visualizations = [None] * N_QUADRANTS_3D
+        self.context.camera_links = [None] * N_QUADRANTS_3D
         self.context.plot_views = [None] * N_QUADRANTS_2D
         self.context.plot_figures = [None] * N_QUADRANTS_2D
         self.context.quadrants = {}
@@ -73,6 +75,7 @@ class App:
             self.context.plot_figures[i] = fig
 
         self.state.quadrants_2d = quadrants_2d
+        self.state.link_cameras = False
 
         self._build_ui()
 
@@ -90,14 +93,35 @@ class App:
     def context(self):
         return self.server.context
 
+    def _realign_visualizations(self):
+        reference_visualization = self.context.visualizations[
+            self.context.reference_quadrant_id
+        ]
+
+        for i in range(N_QUADRANTS_3D):
+            visualization: Visualization = self.context.visualizations[i]
+
+            if (
+                visualization._chromosome == ""
+                or visualization._experiment == ""
+                or visualization._timestep == ""
+            ):
+                continue
+
+            visualization.align(reference_visualization)
+
     def on_clear_chromosome(self, quadrant_id):
         quadrant: StateAdapterQuadrant3D = self.context.quadrants_3d[quadrant_id]
         visualization: Visualization = self.context.visualizations[quadrant_id]
-        simple.HideAll(visualization.render_view)
+        visualization.remove_all_displays()
+        self.context.pv_views[quadrant_id].update()
         quadrant.chromosome = ""
         quadrant.experiment = ""
         quadrant.timestep = ""
-        self.on_camera_reset(quadrant_id)
+        visualization.set_chromosome("", "", "")
+
+        if quadrant_id == self.context.reference_quadrant_id:
+            self.context.reference_quadrant_id = None
 
     def on_apply_chromosome(self, quadrant_id):
         quadrant: StateAdapterQuadrant3D = self.context.quadrants_3d[quadrant_id]
@@ -110,7 +134,7 @@ class App:
 
         visualization: Visualization = self.context.visualizations[quadrant_id]
         # Clear the 3D view
-        simple.HideAll(visualization.render_view)
+        visualization.remove_all_displays()
         # Clear the 2D plot
         figure: plotly_go.Figure = self.context.plot_figures[quadrant_id]
         figure.data = []
@@ -119,11 +143,25 @@ class App:
             quadrant.chromosome, quadrant.experiment, quadrant.timestep
         )
 
+        realign_all = False
+
+        if self.context.reference_quadrant_id is None:
+            self.context.reference_quadrant_id = quadrant_id
+            realign_all = True
+        elif self.context.reference_quadrant_id == quadrant_id:
+            realign_all = True
+
+        if realign_all:
+            self._realign_visualizations()
+        else:
+            visualization.align(
+                self.context.visualizations[self.context.reference_quadrant_id]
+            )
+
         self.on_add_structure_display(quadrant_id, "tube", 10_000)
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         # TODO: add dynamically
-
         try:
             peak_track_name = next(
                 iter(
@@ -251,6 +289,22 @@ class App:
 
             simple.Render(render_view)
 
+    def on_link_cameras(self, *_args):
+        self.state.link_cameras = not self.state.link_cameras
+
+        reference_view = self.context.render_views[0]
+
+        if self.state.link_cameras:
+            for i in range(1, N_QUADRANTS_3D):
+                view = self.context.render_views[i]
+                self.context.camera_links[i] = simple.AddCameraLink(
+                    reference_view, view
+                )
+        else:
+            for i in range(1, N_QUADRANTS_3D):
+                if self.context.camera_links[i] is not None:
+                    simple.RemoveCameraLink(self.context.camera_links[i])
+
     def _build_ui(self):
         self.state.trame__title = "Episcope"
 
@@ -259,7 +313,11 @@ class App:
             layout.title.set_text("Episcope")
 
             with layout.toolbar:
-                pass
+                vuetify.VBtn(
+                    icon="mdi-camera-switch",
+                    variant=("link_cameras ? 'tonal' : ''",),
+                    click=self.on_link_cameras,
+                )
 
             with layout.content:
                 with html.Div(style="width:100%; height: 100%; position: relative;"):

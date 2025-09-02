@@ -12,6 +12,9 @@ from episcope.library.viz.common import CardinalSplines
 class DataSource:
     """Abstract base class for a datasource of the visualization pipeline."""
 
+    def update(self):
+        raise NotImplementedError
+
     @property
     def output(self):
         """Get the output paraview filter for this data source.
@@ -35,8 +38,13 @@ class StructureSource(DataSource):
 
     def __init__(self):
         """Initialize the StructureSource with default values."""
+        self._data = None
+        self._max_distance = -1
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
+
+    def update(self):
+        self.set_data(self._data, self._max_distance)
 
     @property
     def output(self):
@@ -74,6 +82,9 @@ class StructureSource(DataSource):
         if self._splines is None:
             msg = "splines should be set before setting source data."
             raise RuntimeError(msg)
+
+        self._data = data
+        self._max_distance = max_distance
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -126,8 +137,13 @@ class PeakTrackSource(DataSource):
 
     def __init__(self):
         """Initialize the PeakTrackSource with default values."""
+        self._data = None
+        self._max_distance = -1
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
+
+    def update(self):
+        self.set_data(self._data, self._max_distance)
 
     @property
     def output(self):
@@ -165,6 +181,9 @@ class PeakTrackSource(DataSource):
         if self._splines is None:
             msg = "splines should be set before setting source data."
             raise RuntimeError(msg)
+
+        self._data = data
+        self._max_distance = max_distance
 
         polydata = vtkPolyData()
         points = vtkPoints()
@@ -231,8 +250,13 @@ class PointTrackSource(DataSource):
 
     def __init__(self):
         """Initialize the PointTrackSource with default values."""
+        self._data = None
+        self._max_distance = -1
         self._splines: CardinalSplines | None = None
         self._output = simple.TrivialProducer()
+
+    def update(self):
+        self.set_data(self._data, self._max_distance)
 
     @property
     def output(self):
@@ -270,6 +294,9 @@ class PointTrackSource(DataSource):
         if self._splines is None:
             msg = "splines should be set before setting source data."
             raise RuntimeError(msg)
+
+        self._data = data
+        self._max_distance = max_distance
 
         polydata = vtkPolyData()
         points = vtkPoints()
