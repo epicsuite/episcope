@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.0 (2025-09-02)
+
+### Features
+
+- **camera**: Add ability to link the camera across quadrants
+  ([`67f1424`](https://github.com/epicsuite/episcope/commit/67f1424535f5a76def33d7fd886bd1c48d876434))
+
+
 ## v0.1.1 (2025-08-27)
 
 ### Bug Fixes
