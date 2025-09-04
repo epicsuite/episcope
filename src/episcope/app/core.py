@@ -61,6 +61,7 @@ class App:
 
         for i in range(self.N_QUADRANTS_3D):
             render_view = simple.CreateView("RenderView")
+            render_view.SMProxy.render_window.OffScreenRenderingOn()
             quadrant = StateAdapterQuadrant3D(self.state, i)
             quadrant.chromosome = ""
             quadrant.experiment = ""
