@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.2.1 (2025-09-04)
+
+### Bug Fixes
+
+- **quadrants**: Set the number of quadrants via the --num-quadrants cli argument
+  ([`3e08fcc`](https://github.com/epicsuite/episcope/commit/3e08fcce42cc3123e6a445b1d5baeffa894f6bf7))
+
+- **view**: Hide the external paraview render windows
+  ([`6601d31`](https://github.com/epicsuite/episcope/commit/6601d31784453585d5923f1d6ce71206145e88c2))
+
+
 ## v0.2.0 (2025-09-02)
 
 ### Features
