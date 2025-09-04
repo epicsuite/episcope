@@ -17,10 +17,6 @@ from episcope.app.state import EpiscopeState, StateAdapterQuadrant3D
 from episcope.library.io.v1_2 import Ensemble, SourceProvider
 from episcope.library.viz.visualization import Visualization
 
-# Possibly make it dynamic in the future
-N_QUADRANTS_3D = 4
-N_QUADRANTS_2D = N_QUADRANTS_3D
-
 
 @TrameApp()
 class App:
@@ -34,16 +30,27 @@ class App:
             dest="data",
             required=True,
         )
+        self.server.cli.add_argument(
+            "-n",
+            "--num-quadrants",
+            help="Number of quadrants to display.",
+            dest="num_quadrants",
+            type=int,
+            default=2,
+        )
         known_args, _ = self.server.cli.parse_known_args()
         self.context.data_directory = known_args.data
 
+        self.N_QUADRANTS_3D = known_args.num_quadrants
+        self.N_QUADRANTS_2D = self.N_QUADRANTS_3D
+
         self.context.reference_quadrant_id = None
-        self.context.pv_views = [None] * N_QUADRANTS_3D
-        self.context.render_views = [None] * N_QUADRANTS_3D
-        self.context.visualizations = [None] * N_QUADRANTS_3D
-        self.context.camera_links = [None] * N_QUADRANTS_3D
-        self.context.plot_views = [None] * N_QUADRANTS_2D
-        self.context.plot_figures = [None] * N_QUADRANTS_2D
+        self.context.pv_views = [None] * self.N_QUADRANTS_3D
+        self.context.render_views = [None] * self.N_QUADRANTS_3D
+        self.context.visualizations = [None] * self.N_QUADRANTS_3D
+        self.context.camera_links = [None] * self.N_QUADRANTS_3D
+        self.context.plot_views = [None] * self.N_QUADRANTS_2D
+        self.context.plot_figures = [None] * self.N_QUADRANTS_2D
         self.context.quadrants = {}
 
         simple.LoadPalette(paletteName="NeutralGrayBackground")
@@ -52,7 +59,7 @@ class App:
 
         quadrants_3d = {}
 
-        for i in range(N_QUADRANTS_3D):
+        for i in range(self.N_QUADRANTS_3D):
             render_view = simple.CreateView("RenderView")
             quadrant = StateAdapterQuadrant3D(self.state, i)
             quadrant.chromosome = ""
@@ -65,12 +72,18 @@ class App:
 
         quadrants_2d = {}
 
-        for i in range(N_QUADRANTS_2D):
+        for i in range(self.N_QUADRANTS_2D):
             fig = plotly_subplots.make_subplots(specs=[[{"secondary_y": True}]])
             fig.update_layout(
+                title={
+                    "text": f"Plot {i}",
+                    "font": {"size": 14},
+                    "automargin": True,
+                    "yref": "container",
+                },
                 showlegend=False,
                 # plot_bgcolor="white",
-                margin={"t": 10, "l": 10, "b": 10, "r": 10},
+                margin={"t": 20, "l": 10, "b": 0, "r": 10},
             )
             self.context.plot_figures[i] = fig
 
@@ -98,7 +111,7 @@ class App:
             self.context.reference_quadrant_id
         ]
 
-        for i in range(N_QUADRANTS_3D):
+        for i in range(self.N_QUADRANTS_3D):
             visualization: Visualization = self.context.visualizations[i]
 
             if (
@@ -122,6 +135,13 @@ class App:
 
         if quadrant_id == self.context.reference_quadrant_id:
             self.context.reference_quadrant_id = None
+
+        figure: plotly_go.Figure = self.context.plot_figures[quadrant_id]
+        figure.data = []
+        figure.update_yaxes({"title": None})
+        figure.update_yaxes({"title": None}, secondary_y=True)
+        plot_widget = self.context.plot_views[quadrant_id]
+        plot_widget.update(figure)
 
     def on_apply_chromosome(self, quadrant_id):
         quadrant: StateAdapterQuadrant3D = self.context.quadrants_3d[quadrant_id]
@@ -273,13 +293,15 @@ class App:
         self.state.experiments = sorted(experiments)
         self.state.timesteps = sorted(timesteps)
 
-        for i in range(N_QUADRANTS_3D):
+        for i in range(self.N_QUADRANTS_3D):
             render_view = self.context.render_views[i]
             visualization = Visualization(source, render_view)
             self.context.visualizations[i] = visualization
 
     def on_camera_reset(self, quadrant_id=None):
-        quadrant_ids = range(N_QUADRANTS_3D) if quadrant_id is None else [quadrant_id]
+        quadrant_ids = (
+            range(self.N_QUADRANTS_3D) if quadrant_id is None else [quadrant_id]
+        )
 
         for i in quadrant_ids:
             pv_view = self.context.pv_views[i]
@@ -295,13 +317,13 @@ class App:
         reference_view = self.context.render_views[0]
 
         if self.state.link_cameras:
-            for i in range(1, N_QUADRANTS_3D):
+            for i in range(1, self.N_QUADRANTS_3D):
                 view = self.context.render_views[i]
                 self.context.camera_links[i] = simple.AddCameraLink(
                     reference_view, view
                 )
         else:
-            for i in range(1, N_QUADRANTS_3D):
+            for i in range(1, self.N_QUADRANTS_3D):
                 if self.context.camera_links[i] is not None:
                     simple.RemoveCameraLink(self.context.camera_links[i])
 
@@ -321,71 +343,75 @@ class App:
 
             with layout.content:
                 with html.Div(style="width:100%; height: 100%; position: relative;"):
-                    N_ROWS = N_QUADRANTS_3D // 2
-                    N_COLS = N_QUADRANTS_3D // N_ROWS
-                    for row in range(N_ROWS):
-                        for col in range(N_COLS):
-                            quadrant_id = row * 2 + col
+                    N_ROWS = max(self.N_QUADRANTS_3D // 2, 1)
+                    N_COLS = self.N_QUADRANTS_3D // N_ROWS
+                    if N_ROWS * N_COLS < self.N_QUADRANTS_3D:
+                        N_COLS += 1
+
+                    for quadrant_id in range(self.N_QUADRANTS_3D):
+                        row = quadrant_id // N_COLS
+                        col = quadrant_id % N_COLS
+
+                        with html.Div(
+                            style=f"position: absolute; left: {(col / N_COLS) * 80}%; width: {(1 / N_COLS) * 80}%; top: {(row / N_ROWS) * 100}%; height: {(1 / N_ROWS) * 100}%; border-right-style: solid; border-bottom-style: solid; border-color: grey;"
+                        ):
+                            self.context.pv_views[quadrant_id] = (
+                                pv_widgets.VtkRemoteView(
+                                    self.context.render_views[quadrant_id],
+                                    interactive_ratio=1,
+                                )
+                            )
+
+                            quadrant: StateAdapterQuadrant3D = (
+                                self.context.quadrants_3d[quadrant_id]
+                            )
+
                             with html.Div(
-                                style=f"position: absolute; left: {(col / N_COLS) * 80}%; width: {(1 / N_COLS) * 80}%; width: 40%; top: {(row / N_ROWS) * 100}%; height: {(1 / N_ROWS) * 100}%; border-right-style: solid; border-bottom-style: solid; border-color: grey;"
+                                style="position: absolute; top: 1rem; width: 100%;"
                             ):
-                                self.context.pv_views[quadrant_id] = (
-                                    pv_widgets.VtkRemoteView(
-                                        self.context.render_views[quadrant_id],
-                                        interactive_ratio=1,
-                                    )
+                                view_controls(
+                                    quadrant,
+                                    ("chromosomes",),
+                                    ("experiments",),
+                                    ("timesteps",),
+                                    partial(self.on_clear_chromosome, quadrant_id),
+                                    partial(self.on_apply_chromosome, quadrant_id),
+                                    f"{quadrant.show_options_key} = !{quadrant.show_options_key}",
                                 )
 
-                                quadrant: StateAdapterQuadrant3D = (
-                                    self.context.quadrants_3d[quadrant_id]
+                            with vuetify.VSheet(
+                                v_if=(quadrant.show_options_key, False),
+                                elevation=4,
+                                rounded=True,
+                                style="width: 26rem; position: absolute; top: 4rem; right: 2rem; padding-top: 1rem; padding-right: 1rem;",
+                            ):
+                                # TODO: add dynamically
+                                representation_controls(
+                                    [
+                                        {"variable": "structure", "type": "tube"},
+                                        {"variable": "ATAC", "type": "tube"},
+                                        {
+                                            "variable": "compartment",
+                                            "type": "upper_gaussian_contour",
+                                        },
+                                        {
+                                            "variable": "compartment",
+                                            "type": "lower_gaussian_contour",
+                                        },
+                                        {
+                                            "variable": "structure",
+                                            "type": "delaunay",
+                                        },
+                                    ]
                                 )
-
-                                with html.Div(
-                                    style="position: absolute; top: 1rem; width: 100%;"
-                                ):
-                                    view_controls(
-                                        quadrant,
-                                        ("chromosomes",),
-                                        ("experiments",),
-                                        ("timesteps",),
-                                        partial(self.on_clear_chromosome, quadrant_id),
-                                        partial(self.on_apply_chromosome, quadrant_id),
-                                        f"{quadrant.show_options_key} = !{quadrant.show_options_key}",
-                                    )
-
-                                with vuetify.VSheet(
-                                    v_if=(quadrant.show_options_key, False),
-                                    elevation=4,
-                                    rounded=True,
-                                    style="width: 26rem; position: absolute; top: 4rem; right: 2rem; padding-top: 1rem; padding-right: 1rem;",
-                                ):
-                                    # TODO: add dynamically
-                                    representation_controls(
-                                        [
-                                            {"variable": "structure", "type": "tube"},
-                                            {"variable": "ATAC", "type": "tube"},
-                                            {
-                                                "variable": "compartment",
-                                                "type": "upper_gaussian_contour",
-                                            },
-                                            {
-                                                "variable": "compartment",
-                                                "type": "lower_gaussian_contour",
-                                            },
-                                            {
-                                                "variable": "structure",
-                                                "type": "delaunay",
-                                            },
-                                        ]
-                                    )
 
                     with html.Div(
                         style="position: absolute; width: 20%; height: 100%; left: 80%; padding: 1rem;"
                     ):
-                        for quadrant_id in range(N_QUADRANTS_2D):
-                            html.H6(f"Plot {quadrant_id}", classes="text-h6")
-
-                            with html.Div(style="height: 22%;"):
+                        for quadrant_id in range(self.N_QUADRANTS_2D):
+                            with html.Div(
+                                style=f"height: 20rem; max-height: {(1 / self.N_QUADRANTS_2D) * 100}%;"
+                            ):
                                 self.context.plot_views[quadrant_id] = plotly.Figure(
                                     self.context.plot_figures[quadrant_id]
                                 )
