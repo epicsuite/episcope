@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.3.1 (2025-09-25)
+
+### Bug Fixes
+
+- **spec**: Update code to the latest 1.2 spec
+  ([`637327a`](https://github.com/epicsuite/episcope/commit/637327a5b93703d657d160e15ea6484fb8962856))
+
+- **trame**: Use `[]` notation instead of getattr when manipulating state
+  ([`f9de5aa`](https://github.com/epicsuite/episcope/commit/f9de5aa3d5191d0548b5f4779e247475b1556709))
+
+### Chores
+
+- **spec**: Minor updates to the 1.2 spec
+  ([`b57b0c4`](https://github.com/epicsuite/episcope/commit/b57b0c47bd4f2906ada19bafa19ea5bc6ac34381))
+
+
 ## v0.3.0 (2025-09-25)
 
 ### Chores
