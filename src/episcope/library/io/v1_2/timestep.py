@@ -25,7 +25,7 @@ class TimestepMeta(TypedDict):
 class StructureColumns:
     N_COLUMNS = 5
     CHROMOSOME = 0
-    ID = 1
+    INDEX = 1
     X = 2
     Y = 3
     Z = 4
@@ -51,7 +51,7 @@ class PointTrackColumns:
 class LabelsColumns:
     N_COLUMNS = 3
     CHROMOSOME = 0
-    ID = 1
+    INDEX = 1
     TEXT = 2
 
 
@@ -64,7 +64,7 @@ class Timestep:
 
         Raises:
             ValueError: If the provided path is not a directory.
-            FileNotFoundError: If 'meta.yaml' is not found in the directory or if no file ending in '*_autosomes.tsv' is found.
+            FileNotFoundError: If 'structure.csv' is not found in the directory.
         """
         self.directory_path: Path = Path(directory_path)
         if not self.directory_path.is_dir():
@@ -120,7 +120,7 @@ class Timestep:
                 assert len(line) == StructureColumns.N_COLUMNS
 
                 chromosome = line[StructureColumns.CHROMOSOME]
-                index = int(float(line[StructureColumns.ID]))
+                index = int(float(line[StructureColumns.INDEX]))
                 x = float(line[StructureColumns.X])
                 y = float(line[StructureColumns.Y])
                 z = float(line[StructureColumns.Z])
@@ -149,7 +149,7 @@ class Timestep:
                 assert len(line) == LabelsColumns.N_COLUMNS
 
                 chromosome = line[LabelsColumns.CHROMOSOME]
-                index = int(float(line[LabelsColumns.ID]))
+                index = int(float(line[LabelsColumns.INDEX]))
                 text = line[LabelsColumns.TEXT]
 
                 labels = chromosome_labels.setdefault(chromosome, [])

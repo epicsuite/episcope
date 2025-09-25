@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -33,7 +34,6 @@ class Ensemble:
 
         Raises:
             ValueError: If the provided path is not a directory.
-            FileNotFoundError: If 'meta.yaml' is not found in the directory or if no file ending in '*_autosomes.tsv' is found.
         """
         self.directory_path: Path = Path(directory_path)
         if not self.directory_path.is_dir():
@@ -52,30 +52,27 @@ class Ensemble:
 
         Returns:
             Set[str]: A set of chromosome names.
-
-        Raises:
-            FileNotFoundError: If no file ending in '*_autosomes.tsv' is found.
         """
-        for file_path in self.directory_path.glob("*_autosomes.tsv"):
-            with file_path.open("r") as file:
-                return {line.split()[0] for line in file}
+        chromosomes_path = self.directory_path / "provenance" / "contigs.tsv"
+        if not chromosomes_path.exists():
+            msg = "No 'provenance/contigs.tsv' file found in the directory."
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+            return set()
 
-        msg = "No file ending in '*_autosomes.tsv' found in the directory."
-        raise FileNotFoundError(msg)
+        with chromosomes_path.open("r") as file:
+            return {line.split()[0] for line in file}
 
     def _read_meta(self) -> dict[str, Any]:
         """Reads and returns the content of 'meta.yaml' in the directory.
 
         Returns:
             Dict[str, Any]: The content of 'meta.yaml' as a dictionary.
-
-        Raises:
-            FileNotFoundError: If 'meta.yaml' is not found in the directory.
         """
         meta_yaml_path = self.directory_path / "meta.yaml"
         if not meta_yaml_path.exists():
             msg = "No 'meta.yaml' file found in the directory."
-            raise FileNotFoundError(msg)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+            return {}
 
         with meta_yaml_path.open("r") as file:
             return yaml.safe_load(file)
@@ -85,14 +82,12 @@ class Ensemble:
 
         Returns:
             ExperimentsMeta: The content of 'meta.yaml' as a dictionary.
-
-        Raises:
-            FileNotFoundError: If 'meta.yaml' is not found in the directory.
         """
         meta_yaml_path = self.directory_path / "experiments" / "meta.yaml"
         if not meta_yaml_path.exists():
             msg = "No 'experiments/meta.yaml' file found in the directory."
-            raise FileNotFoundError(msg)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+            return {"structure": {"chromosomes": []}}
 
         with meta_yaml_path.open("r") as file:
             return yaml.safe_load(file)
