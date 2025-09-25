@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.3.0 (2025-09-25)
+
+### Chores
+
+- **readme**: Update readme, install from pypi and pv 6.0
+  ([`fbc31c9`](https://github.com/epicsuite/episcope/commit/fbc31c95522fa36ba6ae17825e9e7fadde2c8e4b))
+
+### Features
+
+- **viz**: Dynamically add visual elements and labels
+  ([`899e7f2`](https://github.com/epicsuite/episcope/commit/899e7f2c96e305f28bee454c92cb23cb4d612fe6))
+
+
 ## v0.2.1 (2025-09-04)
 
 ### Bug Fixes
