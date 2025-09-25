@@ -52,11 +52,11 @@ class StateAdapterQuadrant3D:
 
     @property
     def chromosome(self):
-        return self.state.__getattr__(self.chromosome_key)
+        return self.state[self.chromosome_key]
 
     @chromosome.setter
     def chromosome(self, value):
-        self.state.__setattr__(self.chromosome_key, value)
+        self.state[self.chromosome_key] = value
 
     @property
     def experiment_key(self):
@@ -64,11 +64,11 @@ class StateAdapterQuadrant3D:
 
     @property
     def experiment(self):
-        return self.state.__getattr__(self.experiment_key)
+        return self.state[self.experiment_key]
 
     @experiment.setter
     def experiment(self, value):
-        self.state.__setattr__(self.experiment_key, value)
+        self.state[self.experiment_key] = value
 
     @property
     def timestep_key(self):
@@ -76,11 +76,11 @@ class StateAdapterQuadrant3D:
 
     @property
     def timestep(self):
-        return self.state.__getattr__(self.timestep_key)
+        return self.state[self.timestep_key]
 
     @timestep.setter
     def timestep(self, value):
-        self.state.__setattr__(self.timestep_key, value)
+        self.state[self.timestep_key] = value
 
     @property
     def show_options_key(self):
@@ -88,11 +88,11 @@ class StateAdapterQuadrant3D:
 
     @property
     def show_options(self):
-        return self.state.__getattr__(self.show_options_key)
+        return self.state[self.show_options_key]
 
     @show_options.setter
     def show_options(self, value):
-        self.state.__setattr__(self.show_options_key, value)
+        self.state[self.show_options_key] = value
 
     @property
     def has_viz_key(self):
@@ -100,11 +100,11 @@ class StateAdapterQuadrant3D:
 
     @property
     def has_viz(self):
-        return self.state.__getattr__(self.has_viz_key)
+        return self.state[self.has_viz_key]
 
     @has_viz.setter
     def has_viz(self, value):
-        self.state.__setattr__(self.has_viz_key, value)
+        self.state[self.has_viz_key] = value
 
     @property
     def displays_key(self):
@@ -116,7 +116,7 @@ class StateAdapterQuadrant3D:
 
     @displays.setter
     def displays(self, value: dict[int, Display]):
-        self.state.__setattr__(self.displays_key, value)
+        self.state[self.displays_key] = value
 
     @property
     def display_options_key(self):
@@ -128,7 +128,7 @@ class StateAdapterQuadrant3D:
 
     @display_options.setter
     def display_options(self, value: dict[str, DisplayOption]):
-        self.state.__setattr__(self.display_options_key, value)
+        self.state[self.display_options_key] = value
 
 
 class EpiscopeState(State, EpiscopeStateAnnotation):
