@@ -233,3 +233,15 @@ class BaseSourceProvider(ABC):
             A list of LabelPoint objects representing the text labels along the chromosome.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def get_display_options(self, display_type: str):
+        """Get the display options overrides for the given display types.
+
+        Args:
+            display_type: The display type ('tube', 'upper_gaussian_contour', etc.)
+
+        Returns:
+            A dictionary with the display options overrides, if any.
+        """
+        raise NotImplementedError

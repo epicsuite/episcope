@@ -213,6 +213,9 @@ class Visualization:
             display.output, self.render_view, "GeometryRepresentation"
         )
 
+        repr_props_overrides = self._source.get_display_options(display_type)
+        repr_props = {**repr_props, **repr_props_overrides}
+
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
 
@@ -266,6 +269,9 @@ class Visualization:
             repr_props = {}
 
         representation = simple.Show(display.output, self.render_view)
+
+        repr_props_overrides = self._source.get_display_options(display_type)
+        repr_props = {**repr_props, **repr_props_overrides}
 
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
@@ -322,6 +328,9 @@ class Visualization:
             repr_props = {}
 
         representation = simple.Show(display.output, self.render_view)
+
+        repr_props_overrides = self._source.get_display_options(display_type)
+        repr_props = {**repr_props, **repr_props_overrides}
 
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
@@ -380,6 +389,9 @@ class Visualization:
             repr_props = display.representation_properties
 
         self.render_view.GetClientSideObject().GetRenderer().AddActor(display.output)
+
+        repr_props_overrides = self._source.get_display_options(display_type)
+        repr_props = {**repr_props, **repr_props_overrides}
 
         for k, v in repr_props.items():
             display.output.property.__setattr__(k, v)
