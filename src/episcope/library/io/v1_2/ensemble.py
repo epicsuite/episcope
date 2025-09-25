@@ -46,6 +46,7 @@ class Ensemble:
         self._experiments = {
             path.name: Experiment(path) for path in self._discover_experiments()
         }
+        self._display_options = self._read_display_options()
 
     def _read_chromosomes(self) -> set[str]:
         """Finds the first file ending in '*_autosomes.tsv' and reads chromosome names.
@@ -90,6 +91,16 @@ class Ensemble:
             return {"structure": {"chromosomes": []}}
 
         with meta_yaml_path.open("r") as file:
+            return yaml.safe_load(file)
+
+    def _read_display_options(self):
+        display_options_path = self.directory_path / "display_options.yaml"
+        if not display_options_path.exists():
+            msg = "No 'display_options.yaml' file found in the directory."
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+            return {}
+
+        with display_options_path.open("r") as file:
             return yaml.safe_load(file)
 
     def _discover_experiments(self):

@@ -157,3 +157,6 @@ class SourceProvider(BaseSourceProvider):
         _timestep = _experiment._timesteps[timestep]
 
         return _timestep._labels.get(chromosome, [])
+
+    def get_display_options(self, display_type: str):
+        return self._ensemble._display_options.get(display_type, {})
