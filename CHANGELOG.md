@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.2 (2025-09-25)
+
+### Bug Fixes
+
+- **viz**: Add ability to override visualization defaults
+  ([`15e3497`](https://github.com/epicsuite/episcope/commit/15e3497710e72161a25121ba01945feb1d8097b8))
+
+
 ## v0.3.1 (2025-09-25)
 
 ### Bug Fixes
