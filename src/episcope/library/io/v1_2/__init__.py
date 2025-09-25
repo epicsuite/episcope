@@ -146,3 +146,14 @@ class SourceProvider(BaseSourceProvider):
         _track = _timestep._point_tracks[track]
 
         return _track[chromosome]
+
+    def get_labels(
+        self,
+        chromosome: str,
+        experiment: str,
+        timestep: str,
+    ):
+        _experiment = self._ensemble._experiments[experiment]
+        _timestep = _experiment._timesteps[timestep]
+
+        return _timestep._labels.get(chromosome, [])

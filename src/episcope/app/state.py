@@ -11,9 +11,17 @@ class Representation(TypedDict):
     parameters: dict[str, Any]
 
 
-class Track(TypedDict):
+class Display(TypedDict):
+    id: int
     name: str
+    type: str
     representation: Representation
+
+
+class DisplayOption(TypedDict):
+    name: str
+    type: str
+    representations: list[str]
 
 
 class Quadrant2D(TypedDict):
@@ -24,7 +32,7 @@ class Quadrant3D(TypedDict):
     chromosome: str
     experiment: str
     timestep: str
-    tracks: dict[str, Track]
+    displays: dict[str, Display]
 
 
 @dataclass
@@ -85,6 +93,42 @@ class StateAdapterQuadrant3D:
     @show_options.setter
     def show_options(self, value):
         self.state.__setattr__(self.show_options_key, value)
+
+    @property
+    def has_viz_key(self):
+        return f"quadrant3d_{self.quadrant_id}_has_viz"
+
+    @property
+    def has_viz(self):
+        return self.state.__getattr__(self.has_viz_key)
+
+    @has_viz.setter
+    def has_viz(self, value):
+        self.state.__setattr__(self.has_viz_key, value)
+
+    @property
+    def displays_key(self):
+        return f"quadrant3d_{self.quadrant_id}_displays"
+
+    @property
+    def displays(self) -> dict[int, Display]:
+        return self.state.setdefault(self.displays_key, {})
+
+    @displays.setter
+    def displays(self, value: dict[int, Display]):
+        self.state.__setattr__(self.displays_key, value)
+
+    @property
+    def display_options_key(self):
+        return f"quadrant3d_{self.quadrant_id}_display_options_key"
+
+    @property
+    def display_options(self) -> dict[str, DisplayOption]:
+        return self.state.setdefault(self.display_options_key, {})
+
+    @display_options.setter
+    def display_options(self, value: dict[str, DisplayOption]):
+        self.state.__setattr__(self.display_options_key, value)
 
 
 class EpiscopeState(State, EpiscopeStateAnnotation):
