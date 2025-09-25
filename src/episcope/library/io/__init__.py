@@ -46,6 +46,18 @@ class PointTrackPoint(TypedDict):
     value: float
 
 
+class LabelPoint(TypedDict):
+    """A typed dictionary representing a text label point.
+
+    Attributes:
+        index: The base pair index of the point along the chromosome.
+        text: The text of the label.
+    """
+
+    index: int
+    text: str
+
+
 class BaseSourceProvider(ABC):
     """Abstract base class for providing genomic data from various sources.
 
@@ -200,5 +212,24 @@ class BaseSourceProvider(ABC):
 
         Returns:
             A list of PointTrackPoint objects representing the point data.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_labels(
+        self,
+        chromosome: str,
+        experiment: str,
+        timestep: str,
+    ) -> list[LabelPoint]:
+        """Get the labels data for a specific chromosome, experiment, and timestep.
+
+        Args:
+            chromosome: The chromosome name.
+            experiment: The experiment name.
+            timestep: The timestep name.
+
+        Returns:
+            A list of LabelPoint objects representing the text labels along the chromosome.
         """
         raise NotImplementedError

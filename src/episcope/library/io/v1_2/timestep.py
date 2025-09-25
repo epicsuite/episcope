@@ -4,7 +4,12 @@ import csv
 from pathlib import Path
 from typing import TypedDict
 
-from episcope.library.io import PeakTrackPoint, PointTrackPoint, StructurePoint
+from episcope.library.io import (
+    LabelPoint,
+    PeakTrackPoint,
+    PointTrackPoint,
+    StructurePoint,
+)
 
 
 class _TimestepMetaTracks(TypedDict):
@@ -43,6 +48,13 @@ class PointTrackColumns:
     VALUE = 3
 
 
+class LabelsColumns:
+    N_COLUMNS = 3
+    CHROMOSOME = 0
+    ID = 1
+    TEXT = 2
+
+
 class Timestep:
     def __init__(self, directory_path: str | Path) -> None:
         """Initializes the Experiment with a directory path.
@@ -59,13 +71,18 @@ class Timestep:
             msg = f"The provided path '{directory_path}' is not a directory."
             raise ValueError(msg)
 
-        structure_files = list(self._discover_files("csv"))
-
-        if not structure_files:
-            msg = "No structure file (.csv) found in the directory."
+        structure_file = self.directory_path / "structure.csv"
+        if not structure_file.exists():
+            msg = "No structure file (structure.csv) found in the directory."
             raise FileNotFoundError(msg)
 
-        self._structures = self._read_structure(structure_files[0][0])
+        self._structures = self._read_structure(structure_file)
+
+        labels_file = self.directory_path / "labels.csv"
+        if not labels_file.exists():
+            self._labels = {}
+        else:
+            self._labels = self._read_labels(labels_file)
 
         self._peak_tracks = {
             track_stem: self._read_peak_track(track_path)
@@ -118,6 +135,33 @@ class Timestep:
                 )
 
         return chromosome_structures
+
+    def _read_labels(self, path: Path):
+        chromosome_labels: dict[str, list[LabelPoint]] = {}
+
+        with path.open("r") as file:
+            labels_reader = csv.reader(file)
+
+            # skip header line
+            # structure_reader.__next__()
+
+            for line in labels_reader:
+                assert len(line) == LabelsColumns.N_COLUMNS
+
+                chromosome = line[LabelsColumns.CHROMOSOME]
+                index = int(float(line[LabelsColumns.ID]))
+                text = line[LabelsColumns.TEXT]
+
+                labels = chromosome_labels.setdefault(chromosome, [])
+
+                labels.append(
+                    {
+                        "index": index,
+                        "text": text,
+                    }
+                )
+
+        return chromosome_labels
 
     def _read_peak_track(self, path: Path):
         chromosome_track: dict[str, list[PeakTrackPoint]] = {}

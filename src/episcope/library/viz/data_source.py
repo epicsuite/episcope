@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from paraview import simple
-from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints, vtkStringArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData, vtkPolyLine
 from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
 
-from episcope.library.io import PeakTrackPoint, PointTrackPoint
+from episcope.library.io import LabelPoint, PeakTrackPoint, PointTrackPoint
 from episcope.library.viz.common import CardinalSplines
 
 
@@ -364,5 +364,83 @@ class PointTrackSource(DataSource):
         writer.SetFileName("compartment_point_track.vtp")
         writer.SetInputData(polydata)
         writer.Write()
+
+        self._output.GetClientSideObject().SetOutput(polydata)
+
+
+class LabelTrackSource(DataSource):
+    def __init__(self):
+        """Initialize the LabelTrackSource with default values."""
+        self._data = None
+        self._splines: CardinalSplines | None = None
+        self._output = simple.TrivialProducer()
+
+    def update(self):
+        self.set_data(self._data, -1)
+
+    @property
+    def output(self):
+        """Get the output VTK data object for the peak track.
+
+        Returns:
+            The TrivialProducer containing the peak track data as vtkPolyData.
+        """
+        return self._output
+
+    def set_splines(self, splines: CardinalSplines):
+        """Set the cardinal splines for 3D coordinate interpolation.
+
+        Args:
+            splines: A dictionary containing x, y, and z splines for coordinate
+                interpolation.
+        """
+        self._splines = splines
+
+    def set_data(self, data: list[LabelPoint], _max_distance: int):
+        """Set the peak track data and generate VTK polydata for visualization.
+
+        This method processes peak track points to create a 3D representation
+        using cardinal splines. Each peak is represented as a triangle with
+        start point (0), summit point (with value), and end point (0).
+
+        Args:
+            data: A list of PeakTrackPoint objects containing peak information.
+            max_distance: The maximum distance between interpolated points. If <= 0,
+                no interpolation occurs and all original points are used.
+
+        Raises:
+            RuntimeError: If splines have not been set before calling this method.
+        """
+        if self._splines is None:
+            msg = "splines should be set before setting source data."
+            raise RuntimeError(msg)
+
+        self._data = data
+
+        polydata = vtkPolyData()
+        points = vtkPoints()
+        pointdata = polydata.GetPointData()
+
+        labels = vtkStringArray(name="labels")
+        labels.SetNumberOfValues(len(data))
+        points.SetNumberOfPoints(len(data))
+
+        x_spline = self._splines["x"]
+        y_spline = self._splines["y"]
+        z_spline = self._splines["z"]
+
+        for i, label_point in enumerate(data):
+            points.SetPoint(
+                i,
+                (
+                    x_spline.Evaluate(label_point["index"]),
+                    y_spline.Evaluate(label_point["index"]),
+                    z_spline.Evaluate(label_point["index"]),
+                ),
+            )
+            labels.SetValue(i, label_point["text"])
+
+        polydata.SetPoints(points)
+        pointdata.AddArray(labels)
 
         self._output.GetClientSideObject().SetOutput(polydata)

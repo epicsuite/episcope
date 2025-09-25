@@ -1,6 +1,15 @@
 from __future__ import annotations
 
 from paraview import simple
+from vtkmodules.vtkFiltersSources import vtkSphereSource
+from vtkmodules.vtkRenderingCore import (
+    vtkActor,
+    vtkActor2D,
+    vtkGlyph3DMapper,
+)
+from vtkmodules.vtkRenderingLabel import (
+    vtkLabeledDataMapper,
+)
 
 
 class Display:
@@ -270,4 +279,47 @@ class DelaunayDisplay(Display):
             "Representation": "Surface",
             "ColorArrayName": [None, ""],
             "Opacity": 0.07,
+        }
+
+
+class VtkDisplay(Display):
+    pass
+
+
+class LabelsDisplay(VtkDisplay):
+    def __init__(self):
+        super().__init__()
+        self._label_mapper = vtkLabeledDataMapper()
+        self._label_mapper.SetLabelModeToLabelFieldData()
+        self._label_mapper.SetFieldDataName("labels")
+
+        self._output = vtkActor2D(mapper=self._label_mapper)
+
+    @Display.input.setter
+    def input(self, value):
+        self._input = value
+        self._input.GetClientSideObject() >> self._label_mapper
+
+
+class SpheresDisplay(VtkDisplay):
+    def __init__(self):
+        super().__init__()
+        self._sphere_source = vtkSphereSource(radius=0.1)
+        self._point_mapper = vtkGlyph3DMapper(
+            source_connection=self._sphere_source.output_port,
+            scalar_visibility=False,
+            scaling=False,
+        )
+
+        self._output = vtkActor(mapper=self._point_mapper)
+
+    @Display.input.setter
+    def input(self, value):
+        self._input = value
+        self._input.GetClientSideObject() >> self._point_mapper
+
+    @Display.representation_properties.getter
+    def representation_properties(self):
+        return {
+            "color": [1, 1, 0],
         }
