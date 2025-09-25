@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from typing import TypedDict
 
@@ -23,7 +24,6 @@ class Experiment:
 
         Raises:
             ValueError: If the provided path is not a directory.
-            FileNotFoundError: If 'meta.yaml' is not found in the directory or if no file ending in '*_autosomes.tsv' is found.
         """
         self.directory_path: Path = Path(directory_path)
         if not self.directory_path.is_dir():
@@ -35,19 +35,17 @@ class Experiment:
             path.name: Timestep(path) for path in self._discover_timesteps()
         }
 
-    def _read_meta(self) -> ExperimentMeta:
+    def _read_meta(self) -> ExperimentMeta | dict:
         """Reads and returns the content of 'meta.yaml' in the directory.
 
         Returns:
             ExperimentMeta: The content of 'meta.yaml' as a dictionary.
-
-        Raises:
-            FileNotFoundError: If 'meta.yaml' is not found in the directory.
         """
         meta_yaml_path = self.directory_path / "meta.yaml"
         if not meta_yaml_path.exists():
             msg = "No 'meta.yaml' file found in the directory."
-            raise FileNotFoundError(msg)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+            return {}
 
         with meta_yaml_path.open("r") as file:
             return yaml.safe_load(file)
