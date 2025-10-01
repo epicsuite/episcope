@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.3.3 (2025-10-01)
+
+### Bug Fixes
+
+- **app**: Properly clear displays list when switching chromosome/timestep
+  ([`0cb6ae7`](https://github.com/epicsuite/episcope/commit/0cb6ae79a4f3648c5e7bd727c856c38bc294fd1e))
+
+- **io**: Use is_file() instead of exists() to checke whether file paths exist
+  ([`ec2a142`](https://github.com/epicsuite/episcope/commit/ec2a14252d395b3806d2df2f24bc4c68119de2cb))
+
+- **viz**: Turn the display options file into a cli argument
+  ([`b9c9462`](https://github.com/epicsuite/episcope/commit/b9c9462b4222ab5ca69c761f9de6e85e9ea53a60))
+
+
 ## v0.3.2 (2025-09-25)
 
 ### Bug Fixes
