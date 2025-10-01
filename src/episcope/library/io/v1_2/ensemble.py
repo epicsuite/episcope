@@ -60,7 +60,7 @@ class Ensemble:
             Set[str]: A set of chromosome names.
         """
         chromosomes_path = self.directory_path / "provenance" / "contigs.tsv"
-        if not chromosomes_path.exists():
+        if not chromosomes_path.is_file():
             msg = "No 'provenance/contigs.tsv' file found in the directory."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return set()
@@ -75,7 +75,7 @@ class Ensemble:
             Dict[str, Any]: The content of 'meta.yaml' as a dictionary.
         """
         meta_yaml_path = self.directory_path / "meta.yaml"
-        if not meta_yaml_path.exists():
+        if not meta_yaml_path.is_file():
             msg = "No 'meta.yaml' file found in the directory."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return {}
@@ -90,7 +90,7 @@ class Ensemble:
             ExperimentsMeta: The content of 'meta.yaml' as a dictionary.
         """
         meta_yaml_path = self.directory_path / "experiments" / "meta.yaml"
-        if not meta_yaml_path.exists():
+        if not meta_yaml_path.is_file():
             msg = "No 'experiments/meta.yaml' file found in the directory."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return {"structure": {"chromosomes": []}}
