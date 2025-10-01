@@ -72,14 +72,14 @@ class Timestep:
             raise ValueError(msg)
 
         structure_file = self.directory_path / "structure.csv"
-        if not structure_file.exists():
+        if not structure_file.is_file():
             msg = "No structure file (structure.csv) found in the directory."
             raise FileNotFoundError(msg)
 
         self._structures = self._read_structure(structure_file)
 
         labels_file = self.directory_path / "labels.csv"
-        if not labels_file.exists():
+        if not labels_file.is_file():
             self._labels = {}
         else:
             self._labels = self._read_labels(labels_file)

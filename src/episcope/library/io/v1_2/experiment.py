@@ -42,7 +42,7 @@ class Experiment:
             ExperimentMeta: The content of 'meta.yaml' as a dictionary.
         """
         meta_yaml_path = self.directory_path / "meta.yaml"
-        if not meta_yaml_path.exists():
+        if not meta_yaml_path.is_file():
             msg = "No 'meta.yaml' file found in the directory."
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
             return {}
