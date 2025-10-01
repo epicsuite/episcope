@@ -61,3 +61,34 @@ Follow the same instructions as above, with the exception that the `episcope` pa
 # Install the app in editable mode
 pip install -e .
 ```
+
+## Command line arguments
+List of optional command line arguments.
+
+### `--num-quadrants | -n`
+Specify the number of 3D/2D quadrants in the app layout
+
+### `--display-options | -o`
+
+Path to a file will be used to override the default appearance of the 3D visualization.
+
+Example of a minimal display options file:
+```
+tube:
+  Opacity: 0.5
+
+delaunay:
+  Opacity: 0.1
+
+upper_gaussian_contour:
+  Opacity: 0.8
+
+lower_gaussian_contour:
+  Opacity: 0.8
+
+labels:
+  color: [0, 1, 0]
+
+spheres:
+  color: [1, 0, 1]
+```
