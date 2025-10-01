@@ -40,8 +40,16 @@ class App:
             type=int,
             default=2,
         )
+        self.server.cli.add_argument(
+            "-o",
+            "--display-options",
+            help="Path to a yaml file that has overrides for the default appearance of the 3D visualization.",
+            dest="display_options",
+            default="",
+        )
         known_args, _ = self.server.cli.parse_known_args()
         self.context.data_directory = known_args.data
+        self.context.display_options = known_args.display_options
 
         self.N_QUADRANTS_3D = known_args.num_quadrants
         self.N_QUADRANTS_2D = self.N_QUADRANTS_3D
@@ -428,7 +436,7 @@ class App:
         self.on_camera_reset(quadrant_id, reset=False)
 
     def on_server_ready(self, *_args, **_kwargs):
-        ensemble = Ensemble(self.context.data_directory)
+        ensemble = Ensemble(self.context.data_directory, self.context.display_options)
         source = SourceProvider(ensemble)
         self.context.source = source
 

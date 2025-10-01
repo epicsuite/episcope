@@ -22,20 +22,25 @@ class Ensemble:
 
     Attributes:
         directory_path (Path): The path to the directory containing the models.
+        display_options_path (Path): The path to a file that has overrides to the appearance of the 3D visualization.
         _chromosomes (Set[str]): A set of chromosome names.
         _meta (Dict[str, Any]): The content of 'meta.yaml' as a dictionary.
     """
 
-    def __init__(self, directory_path: str | Path) -> None:
+    def __init__(
+        self, directory_path: str | Path, display_options_path: str | Path
+    ) -> None:
         """Initializes the Ensemble with a directory path.
 
         Args:
-            directory_path (str): The path to the directory containing the models.
+            directory_path: The path to the directory containing the models.
+            display_options_path: The path to a file that has overrides to the appearance of the 3D visualization.
 
         Raises:
             ValueError: If the provided path is not a directory.
         """
         self.directory_path: Path = Path(directory_path)
+        self.display_options_path: Path = Path(display_options_path)
         if not self.directory_path.is_dir():
             msg = f"The provided path '{directory_path}' is not a directory."
             raise ValueError(msg)
@@ -46,7 +51,7 @@ class Ensemble:
         self._experiments = {
             path.name: Experiment(path) for path in self._discover_experiments()
         }
-        self._display_options = self._read_display_options()
+        self._display_options = self._read_display_options(self.display_options_path)
 
     def _read_chromosomes(self) -> set[str]:
         """Finds the first file ending in '*_autosomes.tsv' and reads chromosome names.
@@ -93,15 +98,16 @@ class Ensemble:
         with meta_yaml_path.open("r") as file:
             return yaml.safe_load(file)
 
-    def _read_display_options(self):
-        display_options_path = self.directory_path / "display_options.yaml"
-        if not display_options_path.exists():
-            msg = "No 'display_options.yaml' file found in the directory."
-            warnings.warn(msg, RuntimeWarning, stacklevel=2)
-            return {}
+    def _read_display_options(self, display_options_path: Path):
+        if display_options_path.is_file():
+            with display_options_path.open("r") as file:
+                return yaml.safe_load(file)
 
-        with display_options_path.open("r") as file:
-            return yaml.safe_load(file)
+        if display_options_path != Path():
+            msg = f"No display_options file found: '{display_options_path}'."
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
+
+        return {}
 
     def _discover_experiments(self):
         experiments_dir = self.directory_path / "experiments"
