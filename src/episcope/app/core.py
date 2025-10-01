@@ -176,11 +176,14 @@ class App:
 
     def on_apply_chromosome(self, quadrant_id):
         quadrant: StateAdapterQuadrant3D = self.context.quadrants_3d[quadrant_id]
+        quadrant.displays.clear()
+
         if (
             quadrant.chromosome == ""
             or quadrant.experiment == ""
             or quadrant.timestep == ""
         ):
+            self.state.dirty(quadrant.displays_key)
             return
 
         visualization: Visualization = self.context.visualizations[quadrant_id]
