@@ -65,7 +65,7 @@ class App:
 
         simple.LoadPalette(paletteName="NeutralGrayBackground")
         palette = simple.GetSettingsProxy("ColorPalette")
-        palette.Background = [0.784314, 0.784314, 0.784314]
+        palette.Background = [0.13, 0.14, 0.15]
 
         quadrants_3d = {}
 

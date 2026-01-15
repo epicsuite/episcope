@@ -276,6 +276,9 @@ class Visualization:
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
 
+        if display_type == "tube":
+            representation.RescaleTransferFunctionToDataRange(True)
+
         return display, representation, repr_props
 
     def _add_point_display(

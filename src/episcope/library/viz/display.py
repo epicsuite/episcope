@@ -49,74 +49,30 @@ class TubeDisplay(Display):
         self._output = simple.Tube()
         self.lut = simple.CreateLookupTable()
         self.lut.RGBPoints = [
-            0.7796000000000001,
-            0.007843,
-            0.219608,
-            0.345098,
-            314.455683998,
-            0.01178,
-            0.286536,
-            0.449427,
-            628.1317679959999,
-            0.015702,
-            0.35328,
-            0.553479,
-            941.8103516042,
-            0.01767,
-            0.396586,
-            0.622376,
-            1255.4864356022001,
-            0.021115,
-            0.4402,
-            0.690688,
-            1569.1625196002,
-            0.11757,
-            0.503191,
-            0.722184,
-            1882.8386035982,
-            0.214625,
-            0.565859,
-            0.753633,
-            2196.5146875962,
-            0.336671,
-            0.615071,
-            0.78316,
-            2510.1921963720138,
-            0.457978,
-            0.663975,
-            0.812503,
-            2823.8693552024,
-            0.556401,
-            0.703345,
-            0.836125,
-            3137.5454392004,
-            0.65421,
-            0.742714,
-            0.859669,
-            3451.2215231984,
-            0.736886,
-            0.782084,
-            0.881323,
-            3764.8976071964003,
-            0.81827,
-            0.821638,
-            0.903068,
-            4078.5761908045997,
-            0.873387,
-            0.864944,
-            0.92669,
-            4392.2522748026,
-            0.927536,
-            0.907605,
-            0.949988,
-            4705.9283588006,
-            0.964937,
-            0.9391,
-            0.967705,
-            5000.0,
-            1.0,
-            0.968627,
-            0.984314,
+			-0.247059,
+			0.90551300000000001,
+			0.163552,
+			0.54293000000000002,
+			-0.121569,
+			0.88976500000000003,
+			0.28166099999999999,
+			0.61773199999999995,
+			0.0039215700000000001,
+			0.87315600000000004,
+			0.39896999999999999,
+			0.69161099999999998,
+			0.129412,
+			0.82984999999999998,
+			0.49148799999999998,
+			0.73688600000000004,
+			0.25490200000000002,
+			0.78908100000000003,
+			0.58323700000000001,
+			0.78185300000000002,
+			0.38039200000000001,
+			0.81073399999999995,
+			0.65607099999999996,
+			0.81925400000000004,
         ]
         self.lut.ColorSpace = "RGB"
         self.lut.ScalarRangeInitialized = 1.0
@@ -130,8 +86,13 @@ class TubeDisplay(Display):
 
         if value != "":
             self._output.VaryRadius = "By Scalar"
+            self._output.NumberofSides = 20
+            self._output.Radius = 0.05
+            self._output.RadiusFactor = 10.0
         else:
             self._output.VaryRadius = "Off"
+            self._output.Radius = 0.035
+            self._output.NumberofSides = 8
 
     @Display.input.setter
     def input(self, value):
@@ -139,13 +100,10 @@ class TubeDisplay(Display):
 
         self._output.Input = value
         self._output.Vectors = ["POINTS", "1"]
-        self._output.NumberofSides = 30
-        self._output.Radius = 0.05
         if self.variable != "":
             self._output.VaryRadius = "By Scalar"
         else:
             self._output.VaryRadius = "Off"
-        self._output.RadiusFactor = 10.0
 
     @Display.representation_properties.getter
     def representation_properties(self):
@@ -154,14 +112,14 @@ class TubeDisplay(Display):
         if self.variable == "":
             variable_properties["ColorArrayName"] = [None, ""]
             variable_properties["AmbientColor"] = [
-                0.00784313725490196,
-                0.2196078431372549,
-                0.34509803921568627,
+                0.95,
+                0.93,
+                0.9,
             ]
             variable_properties["DiffuseColor"] = [
-                0.00784313725490196,
-                0.2196078431372549,
-                0.34509803921568627,
+                0.95,
+                0.93,
+                0.9,
             ]
         else:
             variable_properties["ColorArrayName"] = ["POINTS", self.variable]
@@ -228,7 +186,7 @@ class GaussianContourDisplay(Display):
         return {
             "Representation": "Surface",
             "ColorArrayName": ["POINTS", ""],
-            "Opacity": 0.3,
+            "Opacity": 0.25,
         }
 
 
@@ -242,8 +200,8 @@ class UpperGaussianContourDisplay(GaussianContourDisplay):
     def representation_properties(self):
         return {
             **super().representation_properties,
-            "AmbientColor": [0.3333333333333333, 0.0, 1.0],
-            "DiffuseColor": [0.3333333333333333, 0.0, 1.0],
+            "AmbientColor": [0.42, 0.80, 0.83],
+            "DiffuseColor": [0.42, 0.80, 0.83],
         }
 
 
@@ -257,8 +215,8 @@ class LowerGaussianContourDisplay(GaussianContourDisplay):
     def representation_properties(self):
         return {
             **super().representation_properties,
-            "AmbientColor": [0.0, 0.3333333333333333, 0.0],
-            "DiffuseColor": [0.0, 0.3333333333333333, 0.0],
+            "AmbientColor": [0.99, 0.96, 0.44],
+            "DiffuseColor": [0.99, 0.96, 0.44],
         }
 
 
