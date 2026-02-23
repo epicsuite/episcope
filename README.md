@@ -2,7 +2,7 @@
 
 A tool for exploration of epigenetic datasets
 
-|![application](doc/img/episcope.png)|
+|![application](doc/img/episcope.jpg)|
 | ---- |
 |*Screen capture of the episcope tool, showing visualizations of four chromosomes from an experiment.*|
 
