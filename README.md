@@ -34,6 +34,25 @@ pip install episcope
 deactivate
 ```
 
+Or install from a clone of this repository.
+
+```bash
+# Create the virtual environment (check the appropriate python version, see above)
+python3 -m venv .venv --python=3.10
+
+# Activate it
+source .venv/bin/activate
+
+# Clone the repository
+git clone https://github.com/epicsuite/episcope.git
+
+# Install the app from PyPI
+pip install ./episcope
+
+# Deactivate the virtual environment
+deactivate
+```
+
 ## Running
 
 Finally, start the application using the `pvpython` already present on your
