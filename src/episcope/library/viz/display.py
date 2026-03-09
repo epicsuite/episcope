@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from paraview import simple
 from vtkmodules.vtkFiltersSources import vtkSphereSource
+from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkRenderingCore import (
     vtkActor,
     vtkActor2D,
+    vtkDataSetMapper,
     vtkGlyph3DMapper,
 )
 from vtkmodules.vtkRenderingLabel import (
@@ -189,6 +191,31 @@ class GaussianContourDisplay(Display):
             "Opacity": 0.25,
         }
 
+
+class SelectDisplay(Display):
+    def __init__(self):
+        super().__init__()
+        self._selection_extract = vtkExtractSelection()
+        self._selection_mapper = vtkDataSetMapper()
+        self._selection_mapper.SetInputConnection(self._selection_extract.GetOutputPort())
+        self._selection_actor = vtkActor()
+        self._selection_actor.GetProperty().SetColor(1, 0, 1)
+        self._selection_actor.GetProperty().SetPointSize(5)
+
+    @Display.variable.setter
+    def variable(self, value):
+        self._variable = value
+
+    @Display.input.setter
+    def input(self, value):
+        self._input = value
+
+    @Display.representation_properties.getter
+    def representation_properties(self):
+        return {
+            "Representation": "Points",
+            "Opacity": 0.25,
+        }
 
 class UpperGaussianContourDisplay(GaussianContourDisplay):
     def __init__(self):

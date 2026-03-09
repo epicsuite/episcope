@@ -20,6 +20,7 @@ from episcope.library.viz.display import (
     Display,
     LabelsDisplay,
     LowerGaussianContourDisplay,
+    SelectDisplay,
     SpheresDisplay,
     TubeDisplay,
     UpperGaussianContourDisplay,
@@ -152,6 +153,10 @@ class Visualization:
             )
         elif track_type == "point":
             display, representation, repr_props = self._add_point_display(
+                track_name, display_type, point_spacing
+            )
+        elif track_type == "select":
+            display, representation, repr_props = self._add_select_display(
                 track_name, display_type, point_spacing
             )
         elif track_type == "labels":
@@ -337,6 +342,41 @@ class Visualization:
 
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
+
+        return display, representation, repr_props
+
+    def _add_select_display(
+        self, track_name: str, display_type: str, point_spacing: int
+    ) -> tuple[Display, Any, dict]:
+        source_key = f"peak_{track_name}"
+        peak_source_meta = self._sources.get(source_key)
+
+        if peak_source_meta is None:
+            track = self._source.get_peak_track(
+                self._chromosome, self._experiment, self._timestep, track_name
+            )
+            track_source = PeakTrackSource()
+            track_source.set_splines(self._splines)
+            track_source.set_data(track, point_spacing)
+            peak_source_meta = {
+                "source": track_source,
+                "source_name": track_name,
+                "source_type": "peak",
+                "ref_count": 1,
+            }
+
+            self._sources[source_key] = peak_source_meta
+        else:
+            peak_source_meta["ref_count"] += 1
+
+        track_source = peak_source_meta["source"]
+
+        display = SelectDisplay()
+        display.input = track_source.output
+        display.variable = "scalars"
+        repr_props = display.representation_properties
+
+        representation = simple.Show(display.output, self.render_view)
 
         return display, representation, repr_props
 

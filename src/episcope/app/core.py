@@ -59,6 +59,7 @@ class App:
         self.context.render_views = [None] * self.N_QUADRANTS_3D
         self.context.visualizations = [None] * self.N_QUADRANTS_3D
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
+        self.context.vtk_selection = [False] * self.N_QUADRANTS_3D
         self.context.plot_views = [None] * self.N_QUADRANTS_2D
         self.context.plot_figures = [None] * self.N_QUADRANTS_2D
         self.context.quadrants = {}
@@ -107,6 +108,8 @@ class App:
         self.state.show_labels = True
 
         self._build_ui()
+
+        self._install_state_dispatcher()
 
         self.ctrl.add("on_server_ready")(self.on_server_ready)
 
@@ -261,6 +264,7 @@ class App:
                 )
             )
 
+            self.on_add_selection_tool(quadrant_id, peak_track_name, "point")
             self.on_add_peak_track_display(quadrant_id, peak_track_name, "tube")
             self.on_add_peak_track_plot(quadrant_id, peak_track_name)
             figure.update_yaxes(title_text=peak_track_name, secondary_y=True)
@@ -346,6 +350,9 @@ class App:
 
     def on_add_peak_track_display(self, quadrant_id, track_name, representation):
         self.on_add_display_to_viz(quadrant_id, track_name, "peak", representation, -1)
+
+    def on_add_selection_tool(self, quadrant_id, track_name, representation):
+        self.on_add_display_to_viz(quadrant_id, track_name, "select", representation, -1)
 
     def on_add_point_track_display(self, quadrant_id, track_name, representation):
         self.on_add_display_to_viz(quadrant_id, track_name, "point", representation, -1)
@@ -459,7 +466,7 @@ class App:
         )
 
         for i in quadrant_ids:
-            pv_view = self.context.pv_views[i]
+            pv_view = self.context.pv_views[i][0]
             render_view = self.context.render_views[i]
             if reset:
                 pv_view.reset_camera()
@@ -494,6 +501,115 @@ class App:
 
             self.on_camera_reset(quadrant_id, False)
 
+    # ___________INITIAL_GLOBAL_STATE_DISPATCHER_________
+    def _install_state_dispatcher(self):
+        state = self.server.state
+        keys = [f"vtk_selection__{i}" for i in range(self.N_QUADRANTS_3D)]
+        selection_prefix = "vtk_selection__"
+
+        @state.change(*keys)
+        def _sync(**kwargs):
+            # kwargs only contains keys updated in that transaction
+            for k, v in kwargs.items():
+                if not k.startswith(selection_prefix):
+                    continue
+
+                quadrant_id = int(k[len(selection_prefix):])
+                vtk_selection = bool(v)
+
+                # mirror into your context list
+                self.context.vtk_selection[quadrant_id] = vtk_selection
+
+                # update ONLY that quadrant's interactor
+                #self.update_interactor(vtk_selection, quadrant_id)
+
+    def update_interactor(self, vtk_selection, quadrant_id, **kwargs):
+        if False:
+            if vtk_selection:
+                # remote view
+                rw_interactor.SetInteractorStyle(interactor_selection)
+                interactor_selection.StartSelect()
+                # local view
+                VIEW_SELECT = [{"button": 1, "action": "Select"}]
+                state.interactorSettings = VIEW_SELECT
+            else:
+                # remote view
+                rw_interactor.SetInteractorStyle(interactor_trackball)
+                # local view
+                VIEW_INTERACT = [
+                    {"button": 1, "action": "Rotate"},
+                    {"button": 2, "action": "Pan"},
+                    {"button": 3, "action": "Zoom", "scrollEnabled": True},
+                    {"button": 1, "action": "Pan", "alt": True},
+                    {"button": 1, "action": "Zoom", "control": True},
+                    {"button": 1, "action": "Pan", "shift": True},
+                    {"button": 1, "action": "Roll", "alt": True, "shift": True},
+                ]
+                state.interactorSettings = VIEW_INTERACT
+        else:
+            print(quadrant_id)
+            print(vtk_selection)
+
+
+    # ________ON_BOX_SELECTION_CHANGE________
+    def on_box_selection_change(self, selection):
+        global SELECTED_IDX
+        if selection.get("mode") == "remote":
+            actor.GetProperty().SetOpacity(1)
+            selector.SetArea(
+                int(renderer.GetPickX1()),
+                int(renderer.GetPickY1()),
+                int(renderer.GetPickX2()),
+                int(renderer.GetPickY2()),
+            )
+        elif selection.get("mode") == "local":
+            camera = renderer.GetActiveCamera()
+            camera_props = selection.get("camera")
+
+            # Sync client view to server one
+            camera.SetPosition(camera_props.get("position"))
+            camera.SetFocalPoint(camera_props.get("focalPoint"))
+            camera.SetViewUp(camera_props.get("viewUp"))
+            camera.SetParallelProjection(camera_props.get("parallelProjection"))
+            camera.SetParallelScale(camera_props.get("parallelScale"))
+            camera.SetViewAngle(camera_props.get("viewAngle"))
+            render_window.SetSize(selection.get("size"))
+
+            actor.GetProperty().SetOpacity(1)
+            render_window.Render()
+
+            area = selection.get("selection")
+            selector.SetArea(
+                int(area[0]),
+                int(area[2]),
+                int(area[1]),
+                int(area[3]),
+            )
+
+        # Common server selection
+        s = selector.Select()
+        n = s.GetNode(0)
+        ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
+        surface = dsa.WrapDataObject(surface_filter.GetOutput())
+        SELECTED_IDX = surface.PointData["vtkOriginalPointIds"][ids].tolist()
+
+        selection_extract.SetInputConnection(surface_filter.GetOutputPort())
+        selection_extract.SetInputDataObject(1, s)
+        selection_extract.Update()
+        selection_actor.SetVisibility(1)
+        actor.GetProperty().SetOpacity(0.5)
+
+        # Update scatter plot with selection
+        update_figure(**state.to_dict())
+
+        # Update 3D view
+        ctrl.view_update()
+
+        # disable selection mode
+        self.context.vtk_selection[quadrant_id] = False
+    # ________ON_BOX_SELECTION_CHANGE________
+
+
     def _build_ui(self):
         self.state.trame__title = "Episcope"
 
@@ -527,10 +643,23 @@ class App:
                         with html.Div(
                             style=f"position: absolute; left: {(col / N_COLS) * 80}%; width: {(1 / N_COLS) * 80}%; top: {(row / N_ROWS) * 100}%; height: {(1 / N_ROWS) * 100}%; border-right-style: solid; border-bottom-style: solid; border-color: grey;"
                         ):
+                            key = f"vtk_selection__{quadrant_id}"   # unique vtk_selection per quadrant
+
                             self.context.pv_views[quadrant_id] = (
                                 pv_widgets.VtkRemoteView(
                                     self.context.render_views[quadrant_id],
                                     interactive_ratio=1,
+                                    box_selection=(key,),
+                                    box_selection_change=(self.on_box_selection_change, "[$event]"),
+                                ),
+                                vuetify.VCheckbox(
+                                    small=True,
+                                    on_icon="mdi-selection-drag",
+                                    off_icon="mdi-rotate-3d",
+                                    v_model=(key, False),
+                                    style="color: white; position: absolute; bottom: 0; right: 0; z-index: 1;",
+                                    dense=True,
+                                    hide_details=True,
                                 )
                             )
 
