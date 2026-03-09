@@ -19,8 +19,13 @@ from episcope.app.state import DisplayOption, EpiscopeState, StateAdapterQuadran
 from episcope.library.io.v1_2 import Ensemble, SourceProvider
 from episcope.library.viz.visualization import Visualization
 
+from vtkmodules.numpy_interface import dataset_adapter as dsa
+from vtkmodules.vtkCommonDataModel import vtkDataObject
 from vtkmodules.vtkInteractionStyle import (
     vtkInteractorStyleRubberBandPick,
+)
+from vtkmodules.vtkRenderingCore import (
+    vtkHardwareSelector,
 )
 
 @TrameApp()
@@ -63,6 +68,7 @@ class App:
         self.context.render_window_interactors = [None] * self.N_QUADRANTS_3D
         self.context.interactor_selections = [None] * self.N_QUADRANTS_3D
         self.context.base_interactor_styles = [None] * self.N_QUADRANTS_3D
+        self.context.selectors = [None] * self.N_QUADRANTS_3D
         self.context.visualizations = [None] * self.N_QUADRANTS_3D
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
         self.context.vtk_selection = [False] * self.N_QUADRANTS_3D
@@ -93,6 +99,9 @@ class App:
             # maybe can use 1 for all renderviews
             self.context.interactor_selections[i] = vtkInteractorStyleRubberBandPick()
             self.context.base_interactor_styles[i] = self.context.render_window_interactors[i].GetInteractorStyle()
+            self.context.selectors[i] = vtkHardwareSelector()
+            self.context.selectors[i].SetRenderer(self.context.render_views[i].GetRenderer())
+            self.context.selectors[i].SetFieldAssociation(vtkDataObject.FIELD_ASSOCIATION_POINTS)
 
         self.context.quadrants_3d = quadrants_3d
 
@@ -538,64 +547,34 @@ class App:
             # remote view
             self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.interactor_selections[quadrant_id])
             self.context.interactor_selections[quadrant_id].StartSelect()
-            # local view
-            #VIEW_SELECT = [{"button": 1, "action": "Select"}]
-            #state.interactorSettings = VIEW_SELECT
         else:
             # remote view
             self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.base_interactor_styles[quadrant_id])
-            # local view
-            #VIEW_INTERACT = [
-            #    {"button": 1, "action": "Rotate"},
-            #    {"button": 2, "action": "Pan"},
-            #    {"button": 3, "action": "Zoom", "scrollEnabled": True},
-            #    {"button": 1, "action": "Pan", "alt": True},
-            #    {"button": 1, "action": "Zoom", "control": True},
-            #    {"button": 1, "action": "Pan", "shift": True},
-            #    {"button": 1, "action": "Roll", "alt": True, "shift": True},
-            #]
-            #state.interactorSettings = VIEW_INTERACT
 
 
     # ________ON_BOX_SELECTION_CHANGE________
-    def on_box_selection_change(self, selection):
+    def on_box_selection_change(self, selection, quadrant_id):
+        print(selection)
+        print(quadrant_id)
         global SELECTED_IDX
-        if selection.get("mode") == "remote":
-            actor.GetProperty().SetOpacity(1)
-            selector.SetArea(
-                int(renderer.GetPickX1()),
-                int(renderer.GetPickY1()),
-                int(renderer.GetPickX2()),
-                int(renderer.GetPickY2()),
-            )
-        elif selection.get("mode") == "local":
-            camera = renderer.GetActiveCamera()
-            camera_props = selection.get("camera")
-
-            # Sync client view to server one
-            camera.SetPosition(camera_props.get("position"))
-            camera.SetFocalPoint(camera_props.get("focalPoint"))
-            camera.SetViewUp(camera_props.get("viewUp"))
-            camera.SetParallelProjection(camera_props.get("parallelProjection"))
-            camera.SetParallelScale(camera_props.get("parallelScale"))
-            camera.SetViewAngle(camera_props.get("viewAngle"))
-            render_window.SetSize(selection.get("size"))
-
-            actor.GetProperty().SetOpacity(1)
-            render_window.Render()
-
-            area = selection.get("selection")
-            selector.SetArea(
-                int(area[0]),
-                int(area[2]),
-                int(area[1]),
-                int(area[3]),
-            )
+        selector = self.context.selectors[quadrant_id]
+        area = selection.get("selection")
+        selector.SetArea(
+            int(area[0]),
+            int(area[2]),
+            int(area[1]),
+            int(area[3]),
+        )
 
         # Common server selection
         s = selector.Select()
+        print(s)
+        print(s.GetNodes())
         n = s.GetNode(0)
         ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
+        print(ids)
+
+        """
         surface = dsa.WrapDataObject(surface_filter.GetOutput())
         SELECTED_IDX = surface.PointData["vtkOriginalPointIds"][ids].tolist()
 
@@ -610,9 +589,10 @@ class App:
 
         # Update 3D view
         ctrl.view_update()
-
+        """
         # disable selection mode
-        self.context.vtk_selection[quadrant_id] = False
+        key = f"vtk_selection__{quadrant_id}"
+        self.server.state[key] = False
     # ________ON_BOX_SELECTION_CHANGE________
 
 
@@ -656,7 +636,7 @@ class App:
                                     self.context.render_views[quadrant_id],
                                     interactive_ratio=1,
                                     box_selection=(key,),
-                                    box_selection_change=(self.on_box_selection_change, "[$event]"),
+                                    box_selection_change=(partial(self.on_box_selection_change, quadrant_id=quadrant_id), "[$event]"),
                                 ),
                                 vuetify.VCheckbox(
                                     small=True,
