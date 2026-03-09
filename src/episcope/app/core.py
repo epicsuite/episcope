@@ -19,6 +19,9 @@ from episcope.app.state import DisplayOption, EpiscopeState, StateAdapterQuadran
 from episcope.library.io.v1_2 import Ensemble, SourceProvider
 from episcope.library.viz.visualization import Visualization
 
+from vtkmodules.vtkInteractionStyle import (
+    vtkInteractorStyleRubberBandPick,
+)
 
 @TrameApp()
 class App:
@@ -57,6 +60,9 @@ class App:
         self.context.reference_quadrant_id = None
         self.context.pv_views = [None] * self.N_QUADRANTS_3D
         self.context.render_views = [None] * self.N_QUADRANTS_3D
+        self.context.render_window_interactors = [None] * self.N_QUADRANTS_3D
+        self.context.interactor_selections = [None] * self.N_QUADRANTS_3D
+        self.context.base_interactor_styles = [None] * self.N_QUADRANTS_3D
         self.context.visualizations = [None] * self.N_QUADRANTS_3D
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
         self.context.vtk_selection = [False] * self.N_QUADRANTS_3D
@@ -83,6 +89,10 @@ class App:
             quadrant.show_options = False
             quadrants_3d[i] = quadrant
             self.context.render_views[i] = render_view
+            self.context.render_window_interactors[i] = render_view.GetRenderWindow().GetInteractor()
+            # maybe can use 1 for all renderviews
+            self.context.interactor_selections[i] = vtkInteractorStyleRubberBandPick()
+            self.context.base_interactor_styles[i] = self.context.render_window_interactors[i].GetInteractorStyle()
 
         self.context.quadrants_3d = quadrants_3d
 
@@ -521,34 +531,30 @@ class App:
                 self.context.vtk_selection[quadrant_id] = vtk_selection
 
                 # update ONLY that quadrant's interactor
-                #self.update_interactor(vtk_selection, quadrant_id)
+                self.update_interactor(vtk_selection, quadrant_id)
 
     def update_interactor(self, vtk_selection, quadrant_id, **kwargs):
-        if False:
-            if vtk_selection:
-                # remote view
-                rw_interactor.SetInteractorStyle(interactor_selection)
-                interactor_selection.StartSelect()
-                # local view
-                VIEW_SELECT = [{"button": 1, "action": "Select"}]
-                state.interactorSettings = VIEW_SELECT
-            else:
-                # remote view
-                rw_interactor.SetInteractorStyle(interactor_trackball)
-                # local view
-                VIEW_INTERACT = [
-                    {"button": 1, "action": "Rotate"},
-                    {"button": 2, "action": "Pan"},
-                    {"button": 3, "action": "Zoom", "scrollEnabled": True},
-                    {"button": 1, "action": "Pan", "alt": True},
-                    {"button": 1, "action": "Zoom", "control": True},
-                    {"button": 1, "action": "Pan", "shift": True},
-                    {"button": 1, "action": "Roll", "alt": True, "shift": True},
-                ]
-                state.interactorSettings = VIEW_INTERACT
+        if vtk_selection:
+            # remote view
+            self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.interactor_selections[quadrant_id])
+            self.context.interactor_selections[quadrant_id].StartSelect()
+            # local view
+            #VIEW_SELECT = [{"button": 1, "action": "Select"}]
+            #state.interactorSettings = VIEW_SELECT
         else:
-            print(quadrant_id)
-            print(vtk_selection)
+            # remote view
+            self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.base_interactor_styles[quadrant_id])
+            # local view
+            #VIEW_INTERACT = [
+            #    {"button": 1, "action": "Rotate"},
+            #    {"button": 2, "action": "Pan"},
+            #    {"button": 3, "action": "Zoom", "scrollEnabled": True},
+            #    {"button": 1, "action": "Pan", "alt": True},
+            #    {"button": 1, "action": "Zoom", "control": True},
+            #    {"button": 1, "action": "Pan", "shift": True},
+            #    {"button": 1, "action": "Roll", "alt": True, "shift": True},
+            #]
+            #state.interactorSettings = VIEW_INTERACT
 
 
     # ________ON_BOX_SELECTION_CHANGE________
