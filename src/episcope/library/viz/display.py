@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from paraview import simple
+
+# selection help
+from episcope.library.viz.selection_keys import SELECTION_OBJECT_ID, SELECTION_OBJECT_KIND
+from vtkmodules.vtkCommonDataModel import vtkDataObject
+from vtkmodules.vtkCommonCore import vtkInformation
+
 from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkFiltersExtraction import vtkExtractSelection
 from vtkmodules.vtkRenderingCore import (
@@ -13,12 +19,12 @@ from vtkmodules.vtkRenderingLabel import (
     vtkLabeledDataMapper,
 )
 
-
 class Display:
     def __init__(self):
         self._input = None
         self._output = None
         self._variable = ""
+        self._selection_metadata = {}
 
     @property
     def output(self):
@@ -44,6 +50,56 @@ class Display:
     def representation_properties(self):
         return {}
 
+    def set_selection_metadata(self, **metadata):
+        self._selection_metadata.update(metadata)
+
+    def _apply_metadata_to_prop(self, prop):
+        if prop is None:
+            return
+
+        keys = prop.GetPropertyKeys()
+        if keys is None:
+            keys = vtkInformation()
+            prop.SetPropertyKeys(keys)
+
+        object_id = self._selection_metadata.get("object_id")
+        if object_id is not None:
+            keys.Set(SELECTION_OBJECT_ID, str(object_id))
+
+        object_kind = self._selection_metadata.get("object_kind")
+        if object_kind is not None:
+            keys.Set(SELECTION_OBJECT_KIND, str(object_kind))
+
+    def attach_selection_metadata(self, representation=None):
+        """
+        Attach metadata to the render prop/actor used by selection.
+        Call this after Show(...) and Render().
+        """
+        # ParaView/simple-backed displays: metadata goes on the actor owned by the representation
+        if representation is not None:
+            vtk_rep = representation.GetClientSideObject()
+            if vtk_rep is None:
+                return
+
+            prop = None
+
+            if hasattr(vtk_rep, "GetActiveRepresentation"):
+                active = vtk_rep.GetActiveRepresentation()
+                if active is not None and hasattr(active, "GetActor"):
+                    prop = active.GetActor()
+
+            if prop is None and hasattr(vtk_rep, "GetActor"):
+                prop = vtk_rep.GetActor()
+
+            if prop is None and hasattr(vtk_rep, "GetLODActor"):
+                prop = vtk_rep.GetLODActor()
+
+            self._apply_metadata_to_prop(prop)
+            return
+
+        # Raw VTK-backed displays: metadata goes directly on the actor
+        if hasattr(self._output, "GetPropertyKeys") and hasattr(self._output, "SetPropertyKeys"):
+            self._apply_metadata_to_prop(self._output)
 
 class TubeDisplay(Display):
     def __init__(self):

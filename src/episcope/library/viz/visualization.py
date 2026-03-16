@@ -206,17 +206,29 @@ class Visualization:
             display.input = structure_source.output
             display.variable = ""
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="structure-tube"
+            )
         elif display_type == "delaunay":
             display = DelaunayDisplay()
             display.input = structure_source.output
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="structure-delaunay"
+            )
         else:
             display = structure_source
             repr_props = {}
+            display.set_selection_metadata(
+                object_id="structure-source"
+            )
 
         representation = simple.Show(
             display.output, self.render_view, "GeometryRepresentation"
         )
+
+        # selection helper metadata
+        display.attach_selection_metadata(representation)
 
         repr_props_overrides = self._source.get_display_options(display_type)
         repr_props = {**repr_props, **repr_props_overrides}
@@ -255,25 +267,43 @@ class Visualization:
             display.input = track_source.output
             display.variable = "scalars"
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="peak-tube"
+            )
         elif display_type == "lower_gaussian_contour":
             display = LowerGaussianContourDisplay()
             display.input = track_source.output
             display.variable = "scalars"
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="peak-lower-gaussian"
+            )
         elif display_type == "upper_gaussian_contour":
             display = UpperGaussianContourDisplay()
             display.input = track_source.output
             display.variable = "scalars"
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="peak-upper-gaussian"
+            )
         elif display_type == "delaunay":
             display = DelaunayDisplay()
             display.input = track_source.output
             repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="peak-delaunay"
+            )
         else:
             display = track_source
             repr_props = {}
+            display.set_selection_metadata(
+                object_id="peak-source"
+            )
 
         representation = simple.Show(display.output, self.render_view)
+
+        # selection helper metadata
+        display.attach_selection_metadata(representation)
 
         repr_props_overrides = self._source.get_display_options(display_type)
         repr_props = {**repr_props, **repr_props_overrides}

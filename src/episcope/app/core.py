@@ -18,9 +18,13 @@ from episcope.app.state import Display as DisplayState
 from episcope.app.state import DisplayOption, EpiscopeState, StateAdapterQuadrant3D
 from episcope.library.io.v1_2 import Ensemble, SourceProvider
 from episcope.library.viz.visualization import Visualization
+from episcope.library.viz.selection_keys import SELECTION_OBJECT_ID, SELECTION_OBJECT_KIND
 
 from vtkmodules.numpy_interface import dataset_adapter as dsa
-from vtkmodules.vtkCommonDataModel import vtkDataObject
+from vtkmodules.vtkCommonDataModel import (
+        vtkDataObject,
+        vtkSelectionNode,
+)
 from vtkmodules.vtkInteractionStyle import (
     vtkInteractorStyleRubberBandPick,
 )
@@ -568,12 +572,34 @@ class App:
 
         # Common server selection
         s = selector.Select()
-        print(s)
-        print(s.GetNodes())
-        n = s.GetNode(0)
-        ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
-        print(ids)
 
+        objects = {}
+        for i in range(s.GetNumberOfNodes()):
+            node = s.GetNode(i)
+            props = node.GetProperties()
+            prop = props.Get(vtkSelectionNode.PROP())
+
+            object_id = None
+            object_kind = None
+
+            if prop is not None:
+                keys = prop.GetPropertyKeys()
+                # SELECTION_OBJECT_ID and SELECTION_OBJECT_KIND
+                #   imported from selection_keys.py
+                if keys is not None:
+                    if keys.Has(SELECTION_OBJECT_ID):
+                        object_id = keys.Get(SELECTION_OBJECT_ID)
+                        objects[object_id] = i
+
+        if 'structure-tube' not in objects.keys():
+            print('Needs structure tube for selection')
+        else:
+            n = s.GetNode(objects['structure-tube'])
+            ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
+            print(ids)
+
+        # Now that I have the selection,
+        #   need to send it to selection and update the view
         """
         surface = dsa.WrapDataObject(surface_filter.GetOutput())
         SELECTED_IDX = surface.PointData["vtkOriginalPointIds"][ids].tolist()
