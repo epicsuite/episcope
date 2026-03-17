@@ -127,6 +127,24 @@ class Display:
         if hasattr(self._output, "GetPropertyKeys") and hasattr(self._output, "SetPropertyKeys"):
             self._apply_metadata_to_prop(self._output)
 
+class LineDisplay(Display):
+    def __init__(self):
+        super().__init__()
+        self._output = None
+
+    @Display.input.setter
+    def input(self, value):
+        self._input = value
+        self._output = value  # no filter, just pass-through
+
+    @Display.representation_properties.getter
+    def representation_properties(self):
+        return {
+            "Representation": "Wireframe",  # ensures line rendering
+            "Opacity": 0.01,                # fully transparent
+            "LineWidth": 1.0,              # irrelevant but harmless
+        }
+
 class TubeDisplay(Display):
     def __init__(self):
         super().__init__()

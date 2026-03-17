@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from paraview import simple
-from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints, vtkStringArray
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkIntArray, vtkPoints, vtkStringArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData, vtkPolyLine
 from vtkmodules.vtkIOXML import vtkXMLPolyDataWriter
 
@@ -104,6 +104,11 @@ class StructureSource(DataSource):
         points.SetNumberOfPoints(len(indices))
         line.GetPointIds().SetNumberOfIds(len(indices))
 
+        # Add original input/sample index as point data
+        input_index_array = vtkIntArray()
+        input_index_array.SetName("input_index")
+        input_index_array.SetNumberOfValues(len(indices))
+
         x_spline = self._splines["x"]
         y_spline = self._splines["y"]
         z_spline = self._splines["z"]
@@ -118,12 +123,15 @@ class StructureSource(DataSource):
                 ),
             )
             line.GetPointIds().SetId(i, i)
+            # Store your original index alongside the point
+            input_index_array.SetValue(i, int(index))
 
         cells.InsertNextCell(line)
 
         # Set points, cells (lines), and point data to the output vtkPolyData
         polydata.SetPoints(points)
         polydata.SetLines(cells)
+        polydata.GetPointData().AddArray(input_index_array)
 
         self._output.GetClientSideObject().SetOutput(polydata)
 

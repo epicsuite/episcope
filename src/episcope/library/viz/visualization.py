@@ -19,6 +19,7 @@ from episcope.library.viz.display import (
     DelaunayDisplay,
     Display,
     LabelsDisplay,
+    LineDisplay,
     LowerGaussianContourDisplay,
     SelectDisplay,
     SpheresDisplay,
@@ -211,7 +212,14 @@ class Visualization:
             display.set_selection_metadata(
                 object_id="structure-tube"
             )
-            # need to share the TubeDisplay() vtkObject with select display
+        elif display_type == "line":
+            display = LineDisplay()
+            display.input = structure_source.output
+            repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="structure-line"
+            )
+            # need to share the LineDisplay() vtkObject with select display
             display.output.UpdatePipeline()
             out = display.output.GetClientSideObject().GetOutputDataObject(0)
             out_copy = out.NewInstance()

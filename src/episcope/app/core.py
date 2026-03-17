@@ -279,6 +279,7 @@ class App:
             )
 
         self.on_add_structure_display(quadrant_id, "tube", 10_000)
+        self.on_add_structure_display(quadrant_id, "line", 10_000)
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         try:
@@ -589,10 +590,10 @@ class App:
                         object_id = keys.Get(SELECTION_OBJECT_ID)
                         objects[object_id] = i
 
-        if 'structure-tube' not in objects.keys():
-            print('Needs structure tube for selection')
+        if 'structure-line' not in objects.keys():
+            print('Needs structure line for selection')
         else:
-            n = s.GetNode(objects['structure-tube'])
+            n = s.GetNode(objects['structure-line'])
             ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
             self.add_selection(quadrant_id, ids)
 
@@ -620,6 +621,12 @@ class App:
                 count += 1
         select_display = list(displays)[count]["display"]
         select_display.ids = vtk_ids
+
+        select_display_vtk = select_display.output.GetClientSideObject().GetOutputDataObject(0)
+        input_index_array = select_display_vtk.GetPointData().GetArray("input_index")
+
+        # This is the input indices for the structure that are selected
+        print(dsa.vtkDataArrayToVTKArray(input_index_array))
 
         rep = simple.GetRepresentation(select_display.output, self.context.render_views[quadrant_id])
         if rep is None:
