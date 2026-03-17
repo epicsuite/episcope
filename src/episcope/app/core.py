@@ -604,9 +604,19 @@ class App:
         self.server.state[key] = False
     # ________ON_BOX_SELECTION_CHANGE________
 
-    def on_plotly_selected(self, quadrant_id, points):
-        visualization = self.context.visualizations[quadrant_id]
+    def increments_within_ranges(self, ranges, step=10000):
+        values = set()
 
+        for start, end in ranges:
+            first = ((start + step - 1) // step) * step   # first multiple of step >= start
+            last = (end // step) * step                   # last multiple of step <= end
+
+            for x in range(first, last + 1, step):
+                values.add(x)
+
+        return sorted(values)
+
+    def on_plotly_selected(self, quadrant_id, points):
         _START_END_RE = re.compile(r"Start:\s*(\d+)\s+End:\s*(\d+)")
         intervals = []
         for p in (points or []):
@@ -615,7 +625,9 @@ class App:
             se = (a, b) if a <= b else (b, a)
             if se:
                 intervals.append(se)
-        print(intervals)
+        # FIXME: need to figure out how to pass to add_selection
+        #   Need to map from increments_within_ranges to line display ids using the new vtkArray I added
+        #   Once I have that, then I can pass those ids to add_selection
 
     def on_plotly_deselect(self, quadrant_id, points):
         print("deselected")
@@ -759,7 +771,7 @@ class App:
                             ):
                                 self.context.plot_views[quadrant_id] = plotly.Figure(
                                     self.context.plot_figures[quadrant_id],
-                                    selected=(partial(self.on_plotly_selected, quadrant_id), "[$event?.points.map(p => ({text: p.text}))]"),
+                                    selected=(partial(self.on_plotly_selected, quadrant_id), "[$event?.points.map(p => ({text: p.text, pointIndex: p.pointIndex  ?? p.pointNumber, x: p.x, y: p.y}))]"),
                                     deselect=(partial(self.on_plotly_deselect, quadrant_id), "[]"),
                                 )
 
