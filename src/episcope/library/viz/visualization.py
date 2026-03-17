@@ -64,7 +64,7 @@ class Visualization:
         self._dataset_timestamp: tuple[str, str] = ("", "")
         self._displays: dict[int, DisplayMeta] = {}
         self._sources: dict[str, SourceMeta] = {}
-        self._display_id = 0
+        self._display_id = -1
 
     def align(self, other: Visualization | None):
         structure = self._source.get_structure(
@@ -113,12 +113,13 @@ class Visualization:
         track_type: TrackType,
         display_type: str,
         point_spacing: int,
+        vtk_object: object | None = None,
     ):
+        self._display_id += 1
         display_id = self._display_id
         self._add_display(
-            display_id, track_name, track_type, display_type, point_spacing
+            display_id, track_name, track_type, display_type, point_spacing, vtk_object
         )
-        self._display_id += 1
 
         return display_id
 
@@ -142,10 +143,15 @@ class Visualization:
         track_type: TrackType,
         display_type: str,
         point_spacing: int,
+        vtk_object: object | None = None,
     ):
         if track_type == "structure":
             display, representation, repr_props = self._add_structure_display(
                 display_type, point_spacing
+            )
+        elif track_type == "select":
+            display, representation, repr_props = self._add_select_display(
+                track_name, display_type, vtk_object
             )
         elif track_type == "peak":
             display, representation, repr_props = self._add_peak_display(
@@ -153,10 +159,6 @@ class Visualization:
             )
         elif track_type == "point":
             display, representation, repr_props = self._add_point_display(
-                track_name, display_type, point_spacing
-            )
-        elif track_type == "select":
-            display, representation, repr_props = self._add_select_display(
                 track_name, display_type, point_spacing
             )
         elif track_type == "labels":
@@ -209,6 +211,12 @@ class Visualization:
             display.set_selection_metadata(
                 object_id="structure-tube"
             )
+            # need to share the TubeDisplay() vtkObject with select display
+            display.output.UpdatePipeline()
+            out = display.output.GetClientSideObject().GetOutputDataObject(0)
+            out_copy = out.NewInstance()
+            out_copy.DeepCopy(out)
+            self.add_display("select", "select", "select", 0, vtk_object=out_copy)
         elif display_type == "delaunay":
             display = DelaunayDisplay()
             display.input = structure_source.output
@@ -376,34 +384,11 @@ class Visualization:
         return display, representation, repr_props
 
     def _add_select_display(
-        self, track_name: str, display_type: str, point_spacing: int
+        self, track_name: str, display_type: str, tube_object: vtkDataObject
     ) -> tuple[Display, Any, dict]:
-        source_key = f"peak_{track_name}"
-        peak_source_meta = self._sources.get(source_key)
-
-        if peak_source_meta is None:
-            track = self._source.get_peak_track(
-                self._chromosome, self._experiment, self._timestep, track_name
-            )
-            track_source = PeakTrackSource()
-            track_source.set_splines(self._splines)
-            track_source.set_data(track, point_spacing)
-            peak_source_meta = {
-                "source": track_source,
-                "source_name": track_name,
-                "source_type": "peak",
-                "ref_count": 1,
-            }
-
-            self._sources[source_key] = peak_source_meta
-        else:
-            peak_source_meta["ref_count"] += 1
-
-        track_source = peak_source_meta["source"]
 
         display = SelectDisplay()
-        display.input = track_source.output
-        display.variable = "scalars"
+        display.input = tube_object
         repr_props = display.representation_properties
 
         representation = simple.Show(display.output, self.render_view)

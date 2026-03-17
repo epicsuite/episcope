@@ -25,6 +25,9 @@ from vtkmodules.vtkCommonDataModel import (
         vtkDataObject,
         vtkSelectionNode,
 )
+from vtkmodules.vtkCommonCore import (
+        vtkIdTypeArray,
+)
 from vtkmodules.vtkInteractionStyle import (
     vtkInteractorStyleRubberBandPick,
 )
@@ -287,7 +290,6 @@ class App:
                 )
             )
 
-            self.on_add_selection_tool(quadrant_id, peak_track_name, "point")
             self.on_add_peak_track_display(quadrant_id, peak_track_name, "tube")
             self.on_add_peak_track_plot(quadrant_id, peak_track_name)
             figure.update_yaxes(title_text=peak_track_name, secondary_y=True)
@@ -373,9 +375,6 @@ class App:
 
     def on_add_peak_track_display(self, quadrant_id, track_name, representation):
         self.on_add_display_to_viz(quadrant_id, track_name, "peak", representation, -1)
-
-    def on_add_selection_tool(self, quadrant_id, track_name, representation):
-        self.on_add_display_to_viz(quadrant_id, track_name, "select", representation, -1)
 
     def on_add_point_track_display(self, quadrant_id, track_name, representation):
         self.on_add_display_to_viz(quadrant_id, track_name, "point", representation, -1)
@@ -491,11 +490,12 @@ class App:
         for i in quadrant_ids:
             pv_view = self.context.pv_views[i][0]
             render_view = self.context.render_views[i]
+            render_view.Update()
             if reset:
                 pv_view.reset_camera()
+            simple.Render(render_view)
             pv_view.update()
 
-            simple.Render(render_view)
 
     def on_link_cameras(self, *_args):
         self.state.link_cameras = not self.state.link_cameras
@@ -558,8 +558,6 @@ class App:
 
     # ________ON_BOX_SELECTION_CHANGE________
     def on_box_selection_change(self, selection, quadrant_id):
-        print(selection)
-        print(quadrant_id)
         global SELECTED_IDX
         selector = self.context.selectors[quadrant_id]
         area = selection.get("selection")
@@ -596,31 +594,50 @@ class App:
         else:
             n = s.GetNode(objects['structure-tube'])
             ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
-            print(ids)
+            self.add_selection(quadrant_id, ids)
 
-        # Now that I have the selection,
-        #   need to send it to selection and update the view
-        """
-        surface = dsa.WrapDataObject(surface_filter.GetOutput())
-        SELECTED_IDX = surface.PointData["vtkOriginalPointIds"][ids].tolist()
-
-        selection_extract.SetInputConnection(surface_filter.GetOutputPort())
-        selection_extract.SetInputDataObject(1, s)
-        selection_extract.Update()
-        selection_actor.SetVisibility(1)
-        actor.GetProperty().SetOpacity(0.5)
-
-        # Update scatter plot with selection
-        update_figure(**state.to_dict())
-
-        # Update 3D view
-        ctrl.view_update()
-        """
         # disable selection mode
         key = f"vtk_selection__{quadrant_id}"
         self.server.state[key] = False
     # ________ON_BOX_SELECTION_CHANGE________
 
+    def add_selection(self, quadrant_id, ids=None):
+
+        vtk_ids = vtkIdTypeArray()
+        vtk_ids.SetNumberOfTuples(len(ids))
+        for idx, p_id in enumerate(ids):
+            vtk_ids.SetTuple1(idx, p_id)
+            idx += 1
+
+        # pass ids to renderview selection
+        displays = self.context.visualizations[quadrant_id]._displays.values()
+        count = 0
+        for display_meta in displays:
+            if display_meta["track_name"] == "select":
+                select_display_id = count
+                break
+            else:
+                count += 1
+        select_display = list(displays)[count]["display"]
+        select_display.ids = vtk_ids
+
+        rep = simple.GetRepresentation(select_display.output, self.context.render_views[quadrant_id])
+        if rep is None:
+            rep = simple.Show(select_display.output, self.context.render_views[quadrant_id])
+
+        for key, value in select_display.representation_properties.items():
+            setattr(rep, key, value)
+
+        self.on_camera_reset(quadrant_id, reset=False)
+
+
+        # pass ids to plot
+
+    def remove_selection(self, quadrant_id):
+        print(ids)
+
+        # pass ids to renderview selection
+        # pass ids to plot
 
     def _build_ui(self):
         self.state.trame__title = "Episcope"

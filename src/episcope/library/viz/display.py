@@ -4,7 +4,11 @@ from paraview import simple
 
 # selection help
 from episcope.library.viz.selection_keys import SELECTION_OBJECT_ID, SELECTION_OBJECT_KIND
-from vtkmodules.vtkCommonDataModel import vtkDataObject
+from vtkmodules.vtkCommonDataModel import (
+    vtkDataObject,
+    vtkSelection,
+    vtkSelectionNode,
+)
 from vtkmodules.vtkCommonCore import vtkInformation
 
 from vtkmodules.vtkFiltersSources import vtkSphereSource
@@ -19,6 +23,20 @@ from vtkmodules.vtkRenderingLabel import (
     vtkLabeledDataMapper,
 )
 
+def ensure_proxy(obj, name="WrappedVTK"):
+    # Already a ParaView proxy
+    if hasattr(obj, "SMProxy"):
+        return obj
+
+    # Raw VTK dataset/data object -> wrap it
+    if isinstance(obj, vtkDataObject):
+        src = simple.TrivialProducer(registrationName=name)
+        src.GetClientSideObject().SetOutput(obj)
+        src.UpdatePipeline()
+        return src
+
+    raise TypeError(f"Cannot convert object of type {type(obj)} to a ParaView proxy")
+
 class Display:
     def __init__(self):
         self._input = None
@@ -29,6 +47,14 @@ class Display:
     @property
     def output(self):
         return self._output
+
+    @property
+    def ids(self):
+        return self._ids
+
+    @ids.setter
+    def ids(self, value):
+        self._ids = value
 
     @property
     def input(self):
@@ -247,30 +273,71 @@ class GaussianContourDisplay(Display):
             "Opacity": 0.25,
         }
 
-
 class SelectDisplay(Display):
     def __init__(self):
         super().__init__()
-        self._selection_extract = vtkExtractSelection()
-        self._selection_mapper = vtkDataSetMapper()
-        self._selection_mapper.SetInputConnection(self._selection_extract.GetOutputPort())
-        self._selection_actor = vtkActor()
-        self._selection_actor.GetProperty().SetColor(1, 0, 1)
-        self._selection_actor.GetProperty().SetPointSize(5)
 
-    @Display.variable.setter
-    def variable(self, value):
-        self._variable = value
+        self._input = None
+        self._ids = None
+
+        self._sel_node = vtkSelectionNode()
+        self._sel_node.SetContentType(vtkSelectionNode.INDICES)
+        self._sel_node.SetFieldType(vtkSelectionNode.POINT)
+
+        self._sel = vtkSelection()
+        self._sel.AddNode(self._sel_node)
+
+        self._extract = vtkExtractSelection()
+        self._extract.SetInputDataObject(1, self._sel)
+
+        self._output = None
+        self._repr = None
 
     @Display.input.setter
     def input(self, value):
         self._input = value
+        self._extract.SetInputDataObject(0, value)
+        self._update_output()
+
+    @Display.ids.setter
+    def ids(self, value):
+        self._ids = value
+        self._sel_node.SetSelectionList(value)
+        self._update_output()
+
+    def _update_output(self):
+        if self._input is None:
+            return
+
+        self._extract.Update()
+        extracted = self._extract.GetOutput()
+
+        # Make a standalone copy so the shown proxy owns stable data.
+        #copied = extracted.NewInstance()
+        #copied.DeepCopy(extracted)
+
+        # Recreate the producer instead of mutating an already-shown one.
+        if self._output is not None:
+            try:
+                simple.Delete(self._output)
+            except Exception:
+                pass
+
+        self._output = simple.TrivialProducer(registrationName="SelectDisplayOutput")
+        self._output.GetClientSideObject().SetOutput(extracted)
+        self._output.UpdatePipeline()
+
+    @property
+    def output(self):
+        return self._output
 
     @Display.representation_properties.getter
     def representation_properties(self):
         return {
-            "Representation": "Points",
-            "Opacity": 0.25,
+            "Representation": "Point Gaussian",
+            "Opacity": 1,
+            "GaussianRadius": 0.2,
+            "DiffuseColor": [0, 1, 0],
         }
 
 class UpperGaussianContourDisplay(GaussianContourDisplay):
