@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+import re
 
 import numpy as np
 import plotly.graph_objects as plotly_go
@@ -391,18 +392,19 @@ class App:
             track_name,
         )
 
-        x = np.zeros(len(point_track) * 3)
-        y = np.zeros(len(point_track) * 3)
-
+        x = np.zeros(len(point_track))
+        y = np.zeros(len(point_track))
+        start_end = []
         for i, p in enumerate(point_track):
-            x[i * 3] = p["start"]
-            x[i * 3 + 1] = p["summit"]
-            x[i * 3 + 2] = p["end"]
-            y[i * 3] = 0
-            y[i * 3 + 1] = p["value"]
-            y[i * 3 + 2] = 0
+            x[i] = p["summit"]
+            y[i] = p["value"]
+            start_end.append(str("Start: " + str(p["start"]) + " End: " + str(p["end"])))
 
-        figure.add_trace(plotly_go.Scatter(x=x, y=y, name=track_name), secondary_y=True)
+        # may need markers to enable selection tools
+        # from https://plotly.com/python-api-reference/generated/plotly.graph_objects.Scatter.html
+        #  'If there are less than 20 points and the trace is not stacked then the default is
+        #  “lines+markers”. Otherwise, “lines”.'
+        figure.add_trace(plotly_go.Scatter(x=x, y=y, text=start_end, name=track_name, mode="markers"), secondary_y=False)
 
     def on_add_point_track_plot(self, quadrant_id, track_name):
         visualization: Visualization = self.context.visualizations[quadrant_id]
@@ -422,9 +424,9 @@ class App:
             x[i] = p["start"]
             y[i] = p["value"]
 
-        figure.add_trace(
-            plotly_go.Scatter(x=x, y=y, name=track_name), secondary_y=False
-        )
+        #figure.add_trace(
+        #    plotly_go.Scatter(x=x, y=y, name=track_name), secondary_y=False
+        #)
 
     def on_remove_display(self, quadrant_id, display_id):
         visualization: Visualization = self.context.visualizations[quadrant_id]
@@ -602,6 +604,23 @@ class App:
         self.server.state[key] = False
     # ________ON_BOX_SELECTION_CHANGE________
 
+    def on_plotly_selected(self, quadrant_id, points):
+        visualization = self.context.visualizations[quadrant_id]
+
+        _START_END_RE = re.compile(r"Start:\s*(\d+)\s+End:\s*(\d+)")
+        intervals = []
+        for p in (points or []):
+            m = _START_END_RE.search(p["text"] or "")
+            a, b = int(m.group(1)), int(m.group(2))
+            se = (a, b) if a <= b else (b, a)
+            if se:
+                intervals.append(se)
+        print(intervals)
+
+    def on_plotly_deselect(self, quadrant_id, points):
+        print("deselected")
+
+
     def add_selection(self, quadrant_id, ids=None):
 
         vtk_ids = vtkIdTypeArray()
@@ -739,7 +758,9 @@ class App:
                                 style=f"height: 20rem; max-height: {(1 / self.N_QUADRANTS_2D) * 100}%;"
                             ):
                                 self.context.plot_views[quadrant_id] = plotly.Figure(
-                                    self.context.plot_figures[quadrant_id]
+                                    self.context.plot_figures[quadrant_id],
+                                    selected=(partial(self.on_plotly_selected, quadrant_id), "[$event?.points.map(p => ({text: p.text}))]"),
+                                    deselect=(partial(self.on_plotly_deselect, quadrant_id), "[]"),
                                 )
 
 
