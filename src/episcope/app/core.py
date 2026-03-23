@@ -82,7 +82,10 @@ class App:
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
         self.context.vtk_selection = [False] * self.N_QUADRANTS_3D
         self.context.plot_views = [None] * self.N_QUADRANTS_2D
+        self.context.plot_peak_mapper = [None] * self.N_QUADRANTS_2D
+        self.context.plot_ids = [None] * self.N_QUADRANTS_2D
         self.context.plot_figures = [None] * self.N_QUADRANTS_2D
+        self.context.ignore_plotly_events = [True] * self.N_QUADRANTS_2D
         self.context.quadrants = {}
 
         simple.LoadPalette(paletteName="NeutralGrayBackground")
@@ -281,10 +284,8 @@ class App:
             )
 
         self.on_add_structure_display(quadrant_id, "tube", 10_000)
-
-        # create line display for selection and create mapping of index to vtk point id
+        # create line display for selection with mapping of input index to vtk point id
         self.on_add_structure_display(quadrant_id, "line", 10_000)
-
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         try:
@@ -399,10 +400,15 @@ class App:
         x = np.zeros(len(point_track))
         y = np.zeros(len(point_track))
         start_end = []
+        self.context.plot_peak_mapper[quadrant_id] = {}
         for i, p in enumerate(point_track):
             x[i] = p["summit"]
             y[i] = p["value"]
             start_end.append(str("Start: " + str(p["start"]) + " End: " + str(p["end"])))
+
+            # build map of summit to plot point index to use for renderview selection
+            # need to map points from renderview selection to plot indexes
+            self.context.plot_peak_mapper[quadrant_id][p["summit"]] = i
 
         # may need markers to enable selection tools
         # from https://plotly.com/python-api-reference/generated/plotly.graph_objects.Scatter.html
@@ -629,7 +635,27 @@ class App:
 
         return sorted(values)
 
+    def input_index_to_plot_id(self, input_index_array, quadrant_id):
+        plot_ids = set()
+
+        d = self.context.plot_peak_mapper[quadrant_id]
+        for idx in input_index_array:
+            plot_ids.add(d[min(d, key=lambda k: abs(k - idx))])
+
+        return sorted(plot_ids)
+
     def on_plotly_selected(self, quadrant_id, points):
+        if self.context.ignore_plotly_events[quadrant_id] is False:
+            self.context.ignore_plotly_events[quadrant_id] = True
+            print("ignoring selected event")
+            return
+
+        # get plot point indexes
+        plot_ids = []
+        for p in (points or []):
+            plot_ids.append(p["pointIndex"])
+
+        # get peak start+end values
         _START_END_RE = re.compile(r"Start:\s*(\d+)\s+End:\s*(\d+)")
         intervals = []
         for p in (points or []):
@@ -642,7 +668,7 @@ class App:
         # Map increments to structure indexes
         increments = self.increments_within_ranges(intervals)
 
-        # If it doesn't already exist, create a reverse mapping of structure index to structure line vtkPointId
+        # If it doesn't already exist, create a reverse mapping of input structure index to structure line vtkPointId
         if self.context.structure_index_arrays[quadrant_id] == None:
             displays = self.context.visualizations[quadrant_id]._displays.values()
             count = 0
@@ -661,26 +687,35 @@ class App:
             }
 
         # Map structure indexes from plot selection to vtkPointId list
-        ids = []
+        structure_ids = []
         for idx in increments:
-            ids.append(self.context.structure_index_arrays[quadrant_id].get(idx))
+            structure_ids.append(self.context.structure_index_arrays[quadrant_id].get(idx))
 
         # Update the renderview and plot with the selection
-        self.add_selection(quadrant_id, ids)
+        self.add_selection(quadrant_id, structure_ids, plot_ids)
 
-    def on_plotly_deselect(self, quadrant_id, points):
-        print("deselected")
+    def on_plotly_deselect(self, quadrant_id):
+        if self.context.ignore_plotly_events[quadrant_id] is False:
+            self.context.ignore_plotly_events[quadrant_id] = True
+            print("ignoring deselect event")
+            return
 
+        # update plot to clear selection coloring
+        fig = self.context.plot_figures[quadrant_id]
+        fig.data[0].update(
+            unselected={"marker": {"opacity": 1.0}}
+        )
 
-    def add_selection(self, quadrant_id, ids=None):
+        self.context.plot_views[quadrant_id].update(fig)
 
+    def add_selection(self, quadrant_id, structure_ids=None, plot_ids=None):
         vtk_ids = vtkIdTypeArray()
-        vtk_ids.SetNumberOfTuples(len(ids))
-        for idx, p_id in enumerate(ids):
+        vtk_ids.SetNumberOfTuples(len(structure_ids))
+        for idx, p_id in enumerate(structure_ids):
             vtk_ids.SetTuple1(idx, p_id)
             idx += 1
 
-        # pass ids to renderview selection
+        # pass ids to SelectionDisplay object
         displays = self.context.visualizations[quadrant_id]._displays.values()
         count = 0
         for display_meta in displays:
@@ -691,12 +726,7 @@ class App:
         select_display = list(displays)[count]["display"]
         select_display.ids = vtk_ids
 
-        select_display_vtk = select_display.output.GetClientSideObject().GetOutputDataObject(0)
-        input_index_array = select_display_vtk.GetPointData().GetArray("input_index")
-
-        # This is the input indices for the structure that are selected
-        print(dsa.vtkDataArrayToVTKArray(input_index_array))
-
+        # update renderview to show selection
         rep = simple.GetRepresentation(select_display.output, self.context.render_views[quadrant_id])
         if rep is None:
             rep = simple.Show(select_display.output, self.context.render_views[quadrant_id])
@@ -704,10 +734,32 @@ class App:
         for key, value in select_display.representation_properties.items():
             setattr(rep, key, value)
 
+        # pass ids to plot
+        # should only do this if plot_ids is None (selected on renderview not in plot)
+        if plot_ids == None:
+            select_display_vtk = select_display.output.GetClientSideObject().GetOutputDataObject(0)
+            input_index_array = select_display_vtk.GetPointData().GetArray("input_index")
+            input_index_array = dsa.vtkDataArrayToVTKArray(input_index_array)
+
+            # need to get plot_ids given input_index_array
+            plot_ids = self.input_index_to_plot_id(input_index_array, quadrant_id)
+
+        self.context.plot_ids[quadrant_id] = plot_ids
+        # update plot to show selection
+        fig = self.context.plot_figures[quadrant_id]
+        fig.data[0].update(
+            selectedpoints=self.context.plot_ids[quadrant_id],
+            selected={"marker": {"color": "lime"}},
+            unselected={"marker": {"opacity": 0.01}}
+        )
+
+        self.context.ignore_plotly_events[quadrant_id] = True
+        try:
+            self.context.plot_views[quadrant_id].update(fig)
+        finally:
+            self.context.ignore_plotly_events[quadrant_id] = False
         self.on_camera_reset(quadrant_id, reset=False)
 
-
-        # pass ids to plot
 
     def remove_selection(self, quadrant_id):
         print(ids)
