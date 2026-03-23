@@ -123,7 +123,7 @@ class StructureSource(DataSource):
                 ),
             )
             line.GetPointIds().SetId(i, i)
-            # Store your original index alongside the point
+            # Store the original index alongside the point
             input_index_array.SetValue(i, int(index))
 
         cells.InsertNextCell(line)

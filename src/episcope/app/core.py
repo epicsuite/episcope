@@ -77,6 +77,7 @@ class App:
         self.context.interactor_selections = [None] * self.N_QUADRANTS_3D
         self.context.base_interactor_styles = [None] * self.N_QUADRANTS_3D
         self.context.selectors = [None] * self.N_QUADRANTS_3D
+        self.context.structure_index_arrays = [None] * self.N_QUADRANTS_3D
         self.context.visualizations = [None] * self.N_QUADRANTS_3D
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
         self.context.vtk_selection = [False] * self.N_QUADRANTS_3D
@@ -280,7 +281,10 @@ class App:
             )
 
         self.on_add_structure_display(quadrant_id, "tube", 10_000)
+
+        # create line display for selection and create mapping of index to vtk point id
         self.on_add_structure_display(quadrant_id, "line", 10_000)
+
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         try:
@@ -608,11 +612,20 @@ class App:
         values = set()
 
         for start, end in ranges:
-            first = ((start + step - 1) // step) * step   # first multiple of step >= start
-            last = (end // step) * step                   # last multiple of step <= end
+            # First and last multiples within range
+            first = ((start + step - 1) // step) * step
+            last = (end // step) * step
+
+            found = False
 
             for x in range(first, last + 1, step):
                 values.add(x)
+                found = True
+
+            # If no increments inside the range, add nearest increment to start or end
+            if not found:
+                nearest = round((start + end) / 2 / step) * step
+                values.add(nearest)
 
         return sorted(values)
 
@@ -625,9 +638,35 @@ class App:
             se = (a, b) if a <= b else (b, a)
             if se:
                 intervals.append(se)
-        # FIXME: need to figure out how to pass to add_selection
-        #   Need to map from increments_within_ranges to line display ids using the new vtkArray I added
-        #   Once I have that, then I can pass those ids to add_selection
+
+        # Map increments to structure indexes
+        increments = self.increments_within_ranges(intervals)
+
+        # If it doesn't already exist, create a reverse mapping of structure index to structure line vtkPointId
+        if self.context.structure_index_arrays[quadrant_id] == None:
+            displays = self.context.visualizations[quadrant_id]._displays.values()
+            count = 0
+            for display_meta in displays:
+                if display_meta["track_type"] == "line":
+                    break
+                else:
+                    count += 1
+            line_display = list(displays)[count]["display"]
+            line_display_vtk = line_display.output.GetClientSideObject().GetOutputDataObject(0)
+            input_index_array = line_display_vtk.GetPointData().GetArray("input_index")
+
+            self.context.structure_index_arrays[quadrant_id] = {
+                input_index_array.GetValue(pid): pid
+                for pid in range(input_index_array.GetNumberOfTuples())
+            }
+
+        # Map structure indexes from plot selection to vtkPointId list
+        ids = []
+        for idx in increments:
+            ids.append(self.context.structure_index_arrays[quadrant_id].get(idx))
+
+        # Update the renderview and plot with the selection
+        self.add_selection(quadrant_id, ids)
 
     def on_plotly_deselect(self, quadrant_id, points):
         print("deselected")
@@ -646,7 +685,6 @@ class App:
         count = 0
         for display_meta in displays:
             if display_meta["track_name"] == "select":
-                select_display_id = count
                 break
             else:
                 count += 1

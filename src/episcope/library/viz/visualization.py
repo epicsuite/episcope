@@ -150,6 +150,8 @@ class Visualization:
             display, representation, repr_props = self._add_structure_display(
                 display_type, point_spacing
             )
+            if display_type == "line":
+                track_type = "line"
         elif track_type == "select":
             display, representation, repr_props = self._add_select_display(
                 track_name, display_type, vtk_object
