@@ -298,7 +298,7 @@ class App:
 
             self.on_add_peak_track_display(quadrant_id, peak_track_name, "tube")
             self.on_add_peak_track_plot(quadrant_id, peak_track_name)
-            figure.update_yaxes(title_text=peak_track_name, secondary_y=True)
+            figure.update_yaxes(title_text=peak_track_name, secondary_y=False)
         except StopIteration:
             pass
 
@@ -317,8 +317,8 @@ class App:
             self.on_add_point_track_display(
                 quadrant_id, point_track_name, "lower_gaussian_contour"
             )
-            self.on_add_point_track_plot(quadrant_id, point_track_name)
-            figure.update_yaxes(title_text=point_track_name, secondary_y=False)
+            #self.on_add_point_track_plot(quadrant_id, point_track_name)
+            #figure.update_yaxes(title_text=point_track_name, secondary_y=False)
         except StopIteration:
             pass
 
