@@ -536,7 +536,6 @@ class App:
 
             self.on_camera_reset(quadrant_id, False)
 
-    # ___________INITIAL_GLOBAL_STATE_DISPATCHER_________
     def _install_state_dispatcher(self):
         state = self.server.state
         keys = [f"vtk_selection__{i}" for i in range(self.N_QUADRANTS_3D)]
@@ -568,7 +567,6 @@ class App:
             self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.base_interactor_styles[quadrant_id])
 
 
-    # ________ON_BOX_SELECTION_CHANGE________
     def on_box_selection_change(self, selection, quadrant_id):
         # disable selection mode
         key = f"vtk_selection__{quadrant_id}"
@@ -609,7 +607,6 @@ class App:
             n = s.GetNode(objects['structure-line'])
             ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
             self.add_selection(quadrant_id, ids)
-    # ________ON_BOX_SELECTION_CHANGE________
 
     def increments_within_ranges(self, ranges, step=10000):
         values = set()
@@ -717,26 +714,29 @@ class App:
         for key, value in select_display.representation_properties.items():
             setattr(rep, key, value)
 
-        # pass ids to plot
-        # should only do this if plot_ids is None (selected on renderview not in plot)
-        if plot_ids == None:
-            select_display_vtk = select_display.output.GetClientSideObject().GetOutputDataObject(0)
-            input_index_array = select_display_vtk.GetPointData().GetArray("input_index")
-            input_index_array = dsa.vtkDataArrayToVTKArray(input_index_array)
+        # pass ids to plot (should not be done if there is no narrowPeak data)
+        # plot_peak_mapper will be None if there is no narrowPeak data
+        if self.context.plot_peak_mapper[quadrant_id] != None:
+            # should only do this if plot_ids is None (selected on renderview not in plot)
+            if plot_ids == None:
+                select_display_vtk = select_display.output.GetClientSideObject().GetOutputDataObject(0)
+                input_index_array = select_display_vtk.GetPointData().GetArray("input_index")
+                input_index_array = dsa.vtkDataArrayToVTKArray(input_index_array)
 
-            # need to get plot_ids given input_index_array
-            plot_ids = self.input_index_to_plot_id(input_index_array, quadrant_id)
+                # need to get plot_ids given input_index_array
+                plot_ids = self.input_index_to_plot_id(input_index_array, quadrant_id)
 
-        self.context.plot_ids[quadrant_id] = plot_ids
-        # update plot to show selection
-        fig = self.context.plot_figures[quadrant_id]
-        fig.data[0].update(
-            selectedpoints=self.context.plot_ids[quadrant_id],
-            selected={"marker": {"color": "lime"}},
-            unselected={"marker": {"opacity": 0.01}}
-        )
+            self.context.plot_ids[quadrant_id] = plot_ids
+            # update plot to show selection
+            fig = self.context.plot_figures[quadrant_id]
+            fig.data[0].update(
+                selectedpoints=self.context.plot_ids[quadrant_id],
+                selected={"marker": {"color": "lime"}},
+                unselected={"marker": {"opacity": 0.01}}
+            )
 
-        self.context.plot_views[quadrant_id].update(fig)
+            self.context.plot_views[quadrant_id].update(fig)
+
         self.on_camera_reset(quadrant_id, reset=False)
 
 
