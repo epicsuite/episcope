@@ -802,10 +802,23 @@ class App:
                                 ),
                                 vuetify.VCheckbox(
                                     small=True,
-                                    on_icon="mdi-selection-drag",
-                                    off_icon="mdi-rotate-3d",
+                                    true_icon="mdi-selection-drag",
+                                    false_icon="mdi-selection-drag",
                                     v_model=(key, False),
-                                    style="color: white; position: absolute; bottom: 0; right: 0; z-index: 1;",
+                                    title=(f"{key} ? 'Disable selection' : 'Enable selection'",),
+                                    base_color="white",
+                                    color="white",
+                                    style=(
+                                        f"{key} ? "
+                                        "'width: 32px; height: 32px; min-width: 32px; "
+                                        "display: flex; align-items: center; justify-content: center; "
+                                        "background-color: rgba(70,130,180,0.8); border-radius: 50%; "
+                                        "position: absolute; bottom: 5px; right: 5px; z-index: 1;' : "
+                                        "'width: 32px; height: 32px; min-width: 32px; "
+                                        "display: flex; align-items: center; justify-content: center; "
+                                        "background-color: transparent; border-radius: 50%; "
+                                        "position: absolute; bottom: 5px; right: 5px; z-index: 1;'",
+                                    ),
                                     dense=True,
                                     hide_details=True,
                                 )
