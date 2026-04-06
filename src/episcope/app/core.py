@@ -85,7 +85,6 @@ class App:
         self.context.plot_peak_mapper = [None] * self.N_QUADRANTS_2D
         self.context.plot_ids = [None] * self.N_QUADRANTS_2D
         self.context.plot_figures = [None] * self.N_QUADRANTS_2D
-        self.context.ignore_plotly_events = [True] * self.N_QUADRANTS_2D
         self.context.quadrants = {}
 
         simple.LoadPalette(paletteName="NeutralGrayBackground")
@@ -571,7 +570,9 @@ class App:
 
     # ________ON_BOX_SELECTION_CHANGE________
     def on_box_selection_change(self, selection, quadrant_id):
-        global SELECTED_IDX
+        # disable selection mode
+        key = f"vtk_selection__{quadrant_id}"
+        self.server.state[key] = False
         selector = self.context.selectors[quadrant_id]
         area = selection.get("selection")
         selector.SetArea(
@@ -608,10 +609,6 @@ class App:
             n = s.GetNode(objects['structure-line'])
             ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
             self.add_selection(quadrant_id, ids)
-
-        # disable selection mode
-        key = f"vtk_selection__{quadrant_id}"
-        self.server.state[key] = False
     # ________ON_BOX_SELECTION_CHANGE________
 
     def increments_within_ranges(self, ranges, step=10000):
@@ -645,10 +642,10 @@ class App:
         return sorted(plot_ids)
 
     def on_plotly_selected(self, quadrant_id, points):
-        if self.context.ignore_plotly_events[quadrant_id] is False:
-            self.context.ignore_plotly_events[quadrant_id] = True
-            print("ignoring selected event")
+        if not points:
             return
+
+        self.context.plot_ids[quadrant_id] = [p["pointIndex"] for p in points]
 
         # get plot point indexes
         plot_ids = []
@@ -691,22 +688,8 @@ class App:
         for idx in increments:
             structure_ids.append(self.context.structure_index_arrays[quadrant_id].get(idx))
 
-        # Update the renderview and plot with the selection
+        structure_ids = [sid for sid in structure_ids if sid is not None]
         self.add_selection(quadrant_id, structure_ids, plot_ids)
-
-    def on_plotly_deselect(self, quadrant_id):
-        if self.context.ignore_plotly_events[quadrant_id] is False:
-            self.context.ignore_plotly_events[quadrant_id] = True
-            print("ignoring deselect event")
-            return
-
-        # update plot to clear selection coloring
-        fig = self.context.plot_figures[quadrant_id]
-        fig.data[0].update(
-            unselected={"marker": {"opacity": 1.0}}
-        )
-
-        self.context.plot_views[quadrant_id].update(fig)
 
     def add_selection(self, quadrant_id, structure_ids=None, plot_ids=None):
         vtk_ids = vtkIdTypeArray()
@@ -753,11 +736,7 @@ class App:
             unselected={"marker": {"opacity": 0.01}}
         )
 
-        self.context.ignore_plotly_events[quadrant_id] = True
-        try:
-            self.context.plot_views[quadrant_id].update(fig)
-        finally:
-            self.context.ignore_plotly_events[quadrant_id] = False
+        self.context.plot_views[quadrant_id].update(fig)
         self.on_camera_reset(quadrant_id, reset=False)
 
 
@@ -862,7 +841,6 @@ class App:
                                 self.context.plot_views[quadrant_id] = plotly.Figure(
                                     self.context.plot_figures[quadrant_id],
                                     selected=(partial(self.on_plotly_selected, quadrant_id), "[$event?.points.map(p => ({text: p.text, pointIndex: p.pointIndex  ?? p.pointNumber, x: p.x, y: p.y}))]"),
-                                    deselect=(partial(self.on_plotly_deselect, quadrant_id), "[]"),
                                 )
 
 
