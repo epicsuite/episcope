@@ -155,6 +155,11 @@ class App:
     def context(self):
         return self.server.context
 
+    def kill_server(self):
+        import os
+        print("Terminating server...")
+        os._exit(0)
+
     def _realign_visualizations(self):
         reference_visualization = self.context.visualizations[
             self.context.reference_quadrant_id
@@ -756,15 +761,22 @@ class App:
             with layout.toolbar:
                 vuetify.VBtn(
                     icon=("show_labels ? 'mdi-label' : 'mdi-label-off'",),
+                    title="Show labels",
                     variant=("show_labels ? 'tonal' : ''",),
                     click=self.on_toggle_labels,
                 )
                 vuetify.VBtn(
                     icon="mdi-camera-switch",
+                    title="Link cameras",
                     variant=("link_cameras ? 'tonal' : ''",),
                     click=self.on_link_cameras,
                 )
-
+                vuetify.VBtn(
+                    icon="mdi-close-octagon",
+                    title="Shutdown server",
+                    color="red",
+                    click=self.kill_server,
+                )
             with layout.content:
                 with html.Div(style="width:100%; height: 100%; position: relative;"):
                     N_ROWS = max(self.N_QUADRANTS_3D // 2, 1)
