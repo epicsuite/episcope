@@ -500,6 +500,9 @@ class App:
             self.context.visualizations[i] = visualization
 
     def on_camera_reset(self, quadrant_id=None, reset=True):
+        print('in on_camera_reset')
+        print(quadrant_id)
+        print(reset)
         quadrant_ids = (
             range(self.N_QUADRANTS_3D) if quadrant_id is None else [quadrant_id]
         )
@@ -821,6 +824,19 @@ class App:
                                     ),
                                     dense=True,
                                     hide_details=True,
+                                ),
+                                vuetify.VBtn(
+                                    small=True,
+                                    icon="mdi-home",
+                                    dense=True,
+                                    title="Reset camera",
+                                    click=lambda **kwargs: self.on_camera_reset(quadrant_id=quadrant_id, reset=True),
+                                    style=(
+                                        "width: 32px; height: 32px; min-width: 32px; "
+                                        "display: flex; align-items: center; justify-content: center; "
+                                        "position: absolute; bottom: 5px; left: 5px; z-index: 1; "
+                                        "background-color: rgba(80,80,80,0.8); border-radius: 50%; color: white;"
+                                    ),
                                 )
                             )
 
