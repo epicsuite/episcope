@@ -64,7 +64,7 @@ class StructureSource(DataSource):
         """
         self._splines = splines
 
-    def set_data(self, data: list[int], max_distance: int):
+    def set_data(self, data: list[int], max_distance: int, rmsf: list[float] | None):
         """Set the structure data and generate VTK polydata for visualization.
 
         This method processes genomic indices to create a smooth 3D curve representation
@@ -93,12 +93,20 @@ class StructureSource(DataSource):
 
         if max_distance <= 0 or len(data) < 2:
             indices = data
+            rmsf_array = rmsf
         else:
             indices = []
+            rmsf_array = []
             for i in range(len(data) - 1):
                 index = data[i]
+                if rmsf != None:
+                    rmsf_0 = rmsf[i]
+                    rmsf_1 = rmsf[i+1]
                 while index < data[i + 1]:
                     indices.append(index)
+                    # interpolate rmsf to spline indices
+                    if rmsf != None:
+                        rmsf_array.append((index - data[i]) / (data[i+1] - data[i]) * (rmsf_1 - rmsf_0) + rmsf_0)
                     index += max_distance
 
         points.SetNumberOfPoints(len(indices))
@@ -108,6 +116,11 @@ class StructureSource(DataSource):
         input_index_array = vtkIntArray()
         input_index_array.SetName("input_index")
         input_index_array.SetNumberOfValues(len(indices))
+
+        if rmsf != None:
+            rmsf_float_array = vtkFloatArray()
+            rmsf_float_array.SetName("rmsf")
+            rmsf_float_array.SetNumberOfValues(len(indices))
 
         x_spline = self._splines["x"]
         y_spline = self._splines["y"]
@@ -125,6 +138,9 @@ class StructureSource(DataSource):
             line.GetPointIds().SetId(i, i)
             # Store the original index alongside the point
             input_index_array.SetValue(i, int(index))
+            # Store rmsf value
+            if rmsf != None:
+                rmsf_float_array.SetValue(i, rmsf_array[i])
 
         cells.InsertNextCell(line)
 
@@ -132,6 +148,8 @@ class StructureSource(DataSource):
         polydata.SetPoints(points)
         polydata.SetLines(cells)
         polydata.GetPointData().AddArray(input_index_array)
+        if rmsf != None:
+            polydata.GetPointData().AddArray(rmsf_float_array)
 
         self._output.GetClientSideObject().SetOutput(polydata)
 

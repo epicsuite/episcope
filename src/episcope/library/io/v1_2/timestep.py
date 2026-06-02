@@ -23,12 +23,13 @@ class TimestepMeta(TypedDict):
 
 
 class StructureColumns:
-    N_COLUMNS = 5
+    N_COLUMNS = 6
     CHROMOSOME = 0
     INDEX = 1
     X = 2
     Y = 3
     Z = 4
+    RMSF = 5
 
 
 class PeakTrackColumns:
@@ -117,7 +118,9 @@ class Timestep:
             structure_reader.__next__()
 
             for line in structure_reader:
-                assert len(line) == StructureColumns.N_COLUMNS
+                # add support for RMSF column in structure csv
+                # still allow non-RMSF structure.csv with 5 columns
+                assert len(line) == StructureColumns.N_COLUMNS or (len(line) == StructureColumns.N_COLUMNS - 1)
 
                 chromosome = line[StructureColumns.CHROMOSOME]
                 index = int(float(line[StructureColumns.INDEX]))
@@ -125,14 +128,28 @@ class Timestep:
                 y = float(line[StructureColumns.Y])
                 z = float(line[StructureColumns.Z])
 
+                try:
+                    rmsf = float(line[StructureColumns.RMSF])
+                except IndexError:
+                    rmsf = None
+
                 structure = chromosome_structures.setdefault(chromosome, [])
 
-                structure.append(
-                    {
-                        "index": index,
-                        "position": (x, y, z),
-                    }
-                )
+                if rmsf:
+                    structure.append(
+                        {
+                            "index": index,
+                            "position": (x, y, z),
+                            "rmsf": rmsf,
+                        }
+                    )
+                else:
+                    structure.append(
+                        {
+                            "index": index,
+                            "position": (x, y, z),
+                        }
+                    )
 
         return chromosome_structures
 

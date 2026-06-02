@@ -152,6 +152,8 @@ class Visualization:
             )
             if display_type == "line":
                 track_type = "line"
+            if display_type == "rmsf":
+                track_type = "rmsf"
         elif track_type == "select":
             display, representation, repr_props = self._add_select_display(
                 track_name, display_type, vtk_object
@@ -190,9 +192,14 @@ class Visualization:
                 self._chromosome, self._experiment, self._timestep
             )
             structure_indices = [p["index"] for p in structure]
+            # get RMSF data if available
+            try:
+                structure_rmsf = [p["rmsf"] for p in structure]
+            except:
+                structure_rmsf = None
             structure_source = StructureSource()
             structure_source.set_splines(self._splines)
-            structure_source.set_data(structure_indices, point_spacing)
+            structure_source.set_data(structure_indices, point_spacing, structure_rmsf)
             structure_source_meta = {
                 "source": structure_source,
                 "source_name": "structure",
@@ -227,6 +234,14 @@ class Visualization:
             out_copy = out.NewInstance()
             out_copy.DeepCopy(out)
             self.add_display("select", "select", "select", 0, vtk_object=out_copy)
+        elif display_type == "rmsf":
+            display = TubeDisplay()
+            display.input = structure_source.output
+            display.variable = "rmsf"
+            repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="structure-rmsf"
+            )
         elif display_type == "delaunay":
             display = DelaunayDisplay()
             display.input = structure_source.output
@@ -253,6 +268,9 @@ class Visualization:
 
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
+
+        if display_type == "rmsf":
+            representation.RescaleTransferFunctionToDataRange(True)
 
         return display, representation, repr_props
 

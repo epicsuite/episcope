@@ -291,6 +291,8 @@ class App:
         # create line display for selection with mapping of input index to vtk point id
         self.on_add_structure_display(quadrant_id, "line", 10_000)
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
+        # how to get this conditionally if there is a rmsf row?
+        self.on_add_structure_display(quadrant_id, "rmsf", 10_000)
 
         try:
             peak_track_name = next(

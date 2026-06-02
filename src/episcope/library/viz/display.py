@@ -149,6 +149,7 @@ class TubeDisplay(Display):
     def __init__(self):
         super().__init__()
         self._output = simple.Tube()
+        # colormap used for peak tubes
         self.lut = simple.CreateLookupTable()
         self.lut.RGBPoints = [
 			-0.247059,
@@ -178,6 +179,58 @@ class TubeDisplay(Display):
         ]
         self.lut.ColorSpace = "RGB"
         self.lut.ScalarRangeInitialized = 1.0
+
+        # colormap used for rmsf
+        self.rmsf_lut = simple.CreateLookupTable()
+        self.rmsf_lut.RGBPoints = [
+            0.700000,
+            0.231373,
+            0.298039,
+            0.752941,
+
+            0.775000,
+            0.392157,
+            0.529412,
+            0.901961,
+
+            0.850000,
+            0.631373,
+            0.760784,
+            0.964706,
+
+            0.925000,
+            0.827451,
+            0.894118,
+            0.976471,
+
+            1.000000,
+            0.960784,
+            0.960784,
+            0.941176,
+
+            1.050000,
+            0.996078,
+            0.878431,
+            0.713725,
+
+            1.100000,
+            0.956863,
+            0.611765,
+            0.431373,
+
+            1.150000,
+            0.839216,
+            0.321569,
+            0.282353,
+
+            1.200000,
+            0.647059,
+            0.000000,
+            0.149020,
+        ]
+        self.rmsf_lut.ColorSpace = "RGB"
+        self.rmsf_lut.ScalarRangeInitialized = 1.0
+
         self.variable = self._variable
 
     @Display.variable.setter
@@ -186,7 +239,7 @@ class TubeDisplay(Display):
 
         self._output.Scalars = ["POINTS", value]
 
-        if value != "":
+        if value != "" and value != "rmsf":
             self._output.VaryRadius = "By Scalar"
             self._output.NumberofSides = 20
             self._output.Radius = 0.05
@@ -225,7 +278,11 @@ class TubeDisplay(Display):
             ]
         else:
             variable_properties["ColorArrayName"] = ["POINTS", self.variable]
-            variable_properties["LookupTable"] = (self.lut,)
+            if self.variable == "rmsf":
+                variable_properties["LookupTable"] = (self.rmsf_lut,)
+            else:
+                variable_properties["LookupTable"] = (self.lut,)
+
 
         return {
             **variable_properties,
