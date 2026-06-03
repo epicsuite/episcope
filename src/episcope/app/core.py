@@ -247,7 +247,7 @@ class App:
             "structure": {
                 "name": "structure",
                 "type": "structure",
-                "representations": ["tube", "delaunay"],
+                "representations": ["tube", "delaunay", "rmsf", "rmsf_scaled"],
             }
         }
 
@@ -291,9 +291,6 @@ class App:
         # create line display for selection with mapping of input index to vtk point id
         self.on_add_structure_display(quadrant_id, "line", 10_000)
         self.on_add_structure_display(quadrant_id, "delaunay", -1)
-        # how to get this conditionally if there is a rmsf row?
-        self.on_add_structure_display(quadrant_id, "rmsf", 10_000, add_to_viz=False)
-        #self.on_add_structure_display(quadrant_id, "rmsf_scaled", 10_000, add_to_viz=False)
 
         try:
             peak_track_name = next(
@@ -383,14 +380,9 @@ class App:
         )
 
     def on_add_structure_display(self, quadrant_id, representation, interpolation, add_to_viz=True):
-        if add_to_viz:
-            self.on_add_display_to_viz(
-                quadrant_id, "structure", "structure", representation, interpolation
-            )
-        else:
-            self._add_display_to_state(
-                quadrant_id, Visualization.TEMP_DISPLAY_ID, "structure", "structure", representation
-            )
+        self.on_add_display_to_viz(
+            quadrant_id, "structure", "structure", representation, interpolation
+        )
 
     def on_add_peak_track_display(self, quadrant_id, track_name, representation):
         self.on_add_display_to_viz(quadrant_id, track_name, "peak", representation, -1)
@@ -468,7 +460,7 @@ class App:
         self, quadrant_id, display_id, track_name, track_type, representation
     ):
         interpolation = -1
-        if track_type == "structure" and representation == "tube":
+        if track_type == "structure" and representation in {"tube", "rmsf", "rmsf_scaled"}:
             interpolation = 10_000
 
         if display_id == Visualization.TEMP_DISPLAY_ID:

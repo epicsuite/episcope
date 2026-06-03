@@ -186,7 +186,7 @@ class Visualization:
     def _add_structure_display(
         self, display_type: str, point_spacing: int
     ) -> tuple[Display, Any, dict]:
-        source_key = "structure_structure"
+        source_key = f"{display_type}_structure"
         structure_source_meta = self._sources.get(source_key)
 
         if structure_source_meta is None:
@@ -500,6 +500,7 @@ class Visualization:
             return
 
         display_meta = self._displays[display_id]
+        source_key = display_meta.get("source_key")
 
         if isinstance(display_meta["display"], VtkDisplay):
             self.render_view.GetClientSideObject().GetRenderer().RemoveActor(
@@ -512,10 +513,16 @@ class Visualization:
 
         del self._displays[display_id]
 
-        source_key = f"{display_meta['track_type']}_{display_meta['track_name']}"
-        source_meta = self._sources[source_key]
-        source_meta["ref_count"] -= 1
+        if source_key is not None:
+            source_meta = self._sources.get(source_key)
 
-        if source_meta["ref_count"] == 0:
-            simple.Delete(source_meta["source"].output)
-            del self._sources[source_key]
+            if source_meta is None:
+                raise KeyError(
+                    f"Display {display_id!r} references missing source {source_key!r}. "
+                    f"Known sources: {list(self._sources)}"
+                )
+
+            source_meta["ref_count"] -= 1
+
+            if source_meta["ref_count"] <= 0:
+                del self._sources[source_key]
