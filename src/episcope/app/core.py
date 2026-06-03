@@ -247,7 +247,7 @@ class App:
             "structure": {
                 "name": "structure",
                 "type": "structure",
-                "representations": ["tube", "delaunay", "rmsf", "rmsf_scaled"],
+                "representations": ["delaunay", "line", "rmsf", "rmsf_scaled", "tube"],
             }
         }
 
@@ -290,7 +290,6 @@ class App:
         self.on_add_structure_display(quadrant_id, "tube", 10_000)
         # create line display for selection with mapping of input index to vtk point id
         self.on_add_structure_display(quadrant_id, "line", 10_000)
-        self.on_add_structure_display(quadrant_id, "delaunay", -1)
 
         try:
             peak_track_name = next(
