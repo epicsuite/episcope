@@ -149,6 +149,8 @@ class TubeDisplay(Display):
     def __init__(self):
         super().__init__()
         self._output = simple.Tube()
+        # init _scale_tube_size_to_rmsf
+        self._scale_tube_size_to_rmsf = False
         # colormap used for peak tubes
         self.lut = simple.CreateLookupTable()
         self.lut.RGBPoints = [
@@ -239,7 +241,12 @@ class TubeDisplay(Display):
 
         self._output.Scalars = ["POINTS", value]
 
-        if value != "" and value != "rmsf":
+        if self._scale_tube_size_to_rmsf:
+            self._output.VaryRadius = "By Scalar"
+            self._output.NumberofSides = 20
+            self._output.Radius = 0.05
+            self._output.RadiusFactor = 10.0
+        elif value != "" and value != "rmsf":
             self._output.VaryRadius = "By Scalar"
             self._output.NumberofSides = 20
             self._output.Radius = 0.05
@@ -255,10 +262,18 @@ class TubeDisplay(Display):
 
         self._output.Input = value
         self._output.Vectors = ["POINTS", "1"]
-        if self.variable != "":
+        if self.variable != "" or self._scale_tube_size_to_rmsf:
             self._output.VaryRadius = "By Scalar"
         else:
             self._output.VaryRadius = "Off"
+
+    @property
+    def scale_tube_size_to_rmsf(self):
+        return self._scale_tube_size_to_rmsf
+
+    @scale_tube_size_to_rmsf.setter
+    def scale_tube_size_to_rmsf(self, value):
+        self._scale_tube_size_to_rmsf = bool(value)
 
     @Display.representation_properties.getter
     def representation_properties(self):

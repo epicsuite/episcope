@@ -152,8 +152,10 @@ class Visualization:
             )
             if display_type == "line":
                 track_type = "line"
-            if display_type == "rmsf":
+            elif display_type == "rmsf":
                 track_type = "rmsf"
+            elif display_type == "rmsf_scaled":
+                track_type = "rmsf_scaled"
         elif track_type == "select":
             display, representation, repr_props = self._add_select_display(
                 track_name, display_type, vtk_object
@@ -242,6 +244,15 @@ class Visualization:
             display.set_selection_metadata(
                 object_id="structure-rmsf"
             )
+        elif display_type == "rmsf_scaled":
+            display = TubeDisplay()
+            display.input = structure_source.output
+            display.scale_tube_size_to_rmsf = True
+            display.variable = "rmsf"
+            repr_props = display.representation_properties
+            display.set_selection_metadata(
+                object_id="structure-rmsf-scaled"
+            )
         elif display_type == "delaunay":
             display = DelaunayDisplay()
             display.input = structure_source.output
@@ -269,7 +280,7 @@ class Visualization:
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
 
-        if display_type == "rmsf":
+        if display_type == "rmsf" or display_type == "rmsf_scaled":
             representation.RescaleTransferFunctionToDataRange(True)
 
         return display, representation, repr_props
