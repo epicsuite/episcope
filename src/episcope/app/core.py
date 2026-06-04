@@ -243,11 +243,21 @@ class App:
             quadrant.chromosome, quadrant.experiment, quadrant.timestep
         )
 
+        # check for rmsf
+        structure_check = visualization._source.get_structure(visualization._chromosome, visualization._experiment, visualization._timestep)
+        has_rmsf = bool(structure_check) and "rmsf" in structure_check[0]
+        del(structure_check)
+
+        if has_rmsf:
+            structure_representations = ["delaunay", "line", "rmsf", "rmsf_scaled", "tube"]
+        else:
+            structure_representations = ["delaunay", "line", "tube"]
+
         display_options: dict[str, DisplayOption] = {
             "structure": {
                 "name": "structure",
                 "type": "structure",
-                "representations": ["delaunay", "line", "rmsf", "rmsf_scaled", "tube"],
+                "representations": structure_representations,
             }
         }
 
