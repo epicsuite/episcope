@@ -195,9 +195,9 @@ class TubeDisplay(Display):
 
         if self._scale_tube_size_to_rmsf:
             self._output.VaryRadius = "By Scalar"
-            self._output.NumberofSides = 20
-            self._output.Radius = 0.05
-            self._output.RadiusFactor = 10.0
+            self._output.NumberofSides = 8
+            self._output.Radius = 0.035
+            self._output.RadiusFactor = 8.0
         elif value != "" and value != "rmsf":
             self._output.VaryRadius = "By Scalar"
             self._output.NumberofSides = 20
