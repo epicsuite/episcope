@@ -148,7 +148,6 @@ class LineDisplay(Display):
 class TubeDisplay(Display):
     def __init__(self, rmsf_lut=None):
         super().__init__()
-        self._output = simple.Tube()
         # init _scale_tube_size_to_rmsf
         self._scale_tube_size_to_rmsf = False
         # colormap used for peak tubes
@@ -185,8 +184,6 @@ class TubeDisplay(Display):
         # colormap used for rmsf
         self.rmsf_lut = rmsf_lut
 
-        self.variable = self._variable
-
     @Display.variable.setter
     def variable(self, value):
         self._variable = value
@@ -212,12 +209,8 @@ class TubeDisplay(Display):
     def input(self, value):
         self._input = value
 
-        self._output.Input = value
+        self._output = simple.Tube(Input=self._input)
         self._output.Vectors = ["POINTS", "1"]
-        if self.variable != "" or self._scale_tube_size_to_rmsf:
-            self._output.VaryRadius = "By Scalar"
-        else:
-            self._output.VaryRadius = "Off"
 
     @property
     def scale_tube_size_to_rmsf(self):
@@ -282,7 +275,17 @@ class TubeDisplay(Display):
 class GaussianContourDisplay(Display):
     def __init__(self):
         super().__init__()
-        self._threshold = simple.Threshold()
+
+    @Display.variable.setter
+    def variable(self, value):
+        self._variable = value
+
+        self._threshold.Scalars = ["POINTS", value]
+
+    @Display.input.setter
+    def input(self, value):
+        self._input = value
+        self._threshold = simple.Threshold(Input=value)
         self._threshold.UpperThreshold = 0
         self._threshold.LowerThreshold = 0
 
@@ -294,18 +297,6 @@ class GaussianContourDisplay(Display):
         self._output.ContourBy = ["POINTS", "SplatterValues"]
         self._output.Isosurfaces = [1]
         self._output.PointMergeMethod = "Uniform Binning"
-
-    @Display.variable.setter
-    def variable(self, value):
-        self._variable = value
-
-        self._threshold.Scalars = ["POINTS", value]
-
-    @Display.input.setter
-    def input(self, value):
-        self._input = value
-
-        self._threshold.Input = value
 
     @Display.representation_properties.getter
     def representation_properties(self):
@@ -354,10 +345,6 @@ class SelectDisplay(Display):
         self._extract.Update()
         extracted = self._extract.GetOutput()
 
-        # Make a standalone copy so the shown proxy owns stable data.
-        #copied = extracted.NewInstance()
-        #copied.DeepCopy(extracted)
-
         # Recreate the producer instead of mutating an already-shown one.
         if self._output is not None:
             try:
@@ -386,9 +373,12 @@ class UpperGaussianContourDisplay(GaussianContourDisplay):
     def __init__(self):
         super().__init__()
 
-        self._threshold.UpperThreshold = 1
+    @GaussianContourDisplay.input.setter
+    def input(self, value):
+        GaussianContourDisplay.input.fset(self, value)
+        self._threshold.UpperThreshold = 1.0
 
-    @property
+    @GaussianContourDisplay.representation_properties.getter
     def representation_properties(self):
         return {
             **super().representation_properties,
@@ -401,9 +391,12 @@ class LowerGaussianContourDisplay(GaussianContourDisplay):
     def __init__(self):
         super().__init__()
 
+    @GaussianContourDisplay.input.setter
+    def input(self, value):
+        GaussianContourDisplay.input.fset(self, value)
         self._threshold.LowerThreshold = -1.0
 
-    @Display.representation_properties.getter
+    @GaussianContourDisplay.representation_properties.getter
     def representation_properties(self):
         return {
             **super().representation_properties,
@@ -415,13 +408,12 @@ class LowerGaussianContourDisplay(GaussianContourDisplay):
 class DelaunayDisplay(Display):
     def __init__(self):
         super().__init__()
-        self._output = simple.Delaunay3D()
 
     @Display.input.setter
     def input(self, value):
         self._input = value
 
-        self._output.Input = value
+        self._output = simple.Delaunay3D(Input=value)
 
     @Display.representation_properties.getter
     def representation_properties(self):
