@@ -272,6 +272,10 @@ class Visualization:
             display.output, self.render_view, "GeometryRepresentation"
         )
 
+        # structure-line should be the only selectable object
+        if display_type != "line":
+            representation.Pickable = 0
+
         # selection helper metadata
         display.attach_selection_metadata(representation)
 
@@ -378,6 +382,9 @@ class Visualization:
         if display_type == "tube":
             representation.RescaleTransferFunctionToDataRange(True)
 
+        # structure-line should be the only selectable object
+        representation.Pickable = 0
+
         return display, representation, repr_props
 
     def _add_point_display(
@@ -431,6 +438,9 @@ class Visualization:
 
         representation = simple.Show(display.output, self.render_view)
 
+        # structure-line should be the only selectable object
+        representation.Pickable = 0
+
         repr_props_overrides = self._source.get_display_options(display_type)
         repr_props = {**repr_props, **repr_props_overrides}
 
@@ -448,6 +458,9 @@ class Visualization:
         repr_props = display.representation_properties
 
         representation = simple.Show(display.output, self.render_view)
+
+        # structure-line should be the only selectable object
+        representation.Pickable = 0
 
         return display, representation, repr_props
 
