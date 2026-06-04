@@ -66,6 +66,7 @@ class Visualization:
         self._displays: dict[int, DisplayMeta] = {}
         self._sources: dict[str, SourceMeta] = {}
         self._display_id = -1
+        self._rmsf_lut = self._create_rmsf_lut()
 
     def align(self, other: Visualization | None):
         structure = self._source.get_structure(
@@ -237,7 +238,7 @@ class Visualization:
             out_copy.DeepCopy(out)
             self.add_display("select", "select", "select", 0, vtk_object=out_copy)
         elif display_type == "rmsf":
-            display = TubeDisplay()
+            display = TubeDisplay(rmsf_lut=self._rmsf_lut)
             display.input = structure_source.output
             display.variable = "rmsf"
             repr_props = display.representation_properties
@@ -245,7 +246,7 @@ class Visualization:
                 object_id="structure-rmsf"
             )
         elif display_type == "rmsf_scaled":
-            display = TubeDisplay()
+            display = TubeDisplay(rmsf_lut=self._rmsf_lut)
             display.input = structure_source.output
             display.scale_tube_size_to_rmsf = True
             display.variable = "rmsf"
@@ -280,8 +281,24 @@ class Visualization:
         for k, v in repr_props.items():
             representation.__setattr__(k, v)
 
-        if display_type == "rmsf" or display_type == "rmsf_scaled":
+        if display_type in {"rmsf", "rmsf_scaled"}:
             representation.RescaleTransferFunctionToDataRange(True)
+
+            representation.SetScalarBarVisibility(self.render_view, True)
+
+            scalar_bar = simple.GetScalarBar(self._rmsf_lut, self.render_view)
+            scalar_bar.AutoOrient=0,
+            scalar_bar.Orientation='Horizontal',
+            scalar_bar.WindowLocation='Lower Center',
+            scalar_bar.Title='Chromatin Mobility (RMSF)',
+            scalar_bar.ComponentTitle='',
+            scalar_bar.ScalarBarLength=0.5,
+            scalar_bar.AutomaticLabelFormat=0,
+            scalar_bar.DrawTickLabels=0,
+            scalar_bar.UseCustomLabels=1,
+            scalar_bar.RangeLabelFormat='{:<#6.3g}',
+            scalar_bar.DrawAnnotations=0
+            scalar_bar.Visibility = 1
 
         return display, representation, repr_props
 
@@ -511,8 +528,6 @@ class Visualization:
             simple.Delete(display_meta["representation"])
             simple.Delete(display_meta["display"].output)
 
-        del self._displays[display_id]
-
         if source_key is not None:
             source_meta = self._sources.get(source_key)
 
@@ -526,3 +541,75 @@ class Visualization:
 
             if source_meta["ref_count"] <= 0:
                 del self._sources[source_key]
+
+        self._sync_scalar_bars(display_id)
+
+        del self._displays[display_id]
+
+    def _create_rmsf_lut(self):
+        rmsf_lut = simple.CreateLookupTable()
+
+        rmsf_lut.RGBPoints = [
+            0.700000,
+            0.231373,
+            0.298039,
+            0.752941,
+
+            0.775000,
+            0.392157,
+            0.529412,
+            0.901961,
+
+            0.850000,
+            0.631373,
+            0.760784,
+            0.964706,
+
+            0.925000,
+            0.827451,
+            0.894118,
+            0.976471,
+
+            1.000000,
+            0.960784,
+            0.960784,
+            0.941176,
+
+            1.050000,
+            0.996078,
+            0.878431,
+            0.713725,
+
+            1.100000,
+            0.956863,
+            0.611765,
+            0.431373,
+
+            1.150000,
+            0.839216,
+            0.321569,
+            0.282353,
+
+            1.200000,
+            0.647059,
+            0.000000,
+            0.149020,
+        ]
+
+        rmsf_lut.ColorSpace = "RGB"
+        rmsf_lut.ScalarRangeInitialized = 1.0
+
+        return rmsf_lut
+
+    def _sync_scalar_bars(self, display_id):
+        needs_rmsf_bar = any(
+            display_meta.get("track_type") == "structure"
+            and display_meta.get("display_type") in {"rmsf", "rmsf_scaled"}
+            for display_meta in self._displays.values()
+        )
+
+        rmsf_lut = getattr(self, "_rmsf_lut", None)
+
+        if rmsf_lut is not None:
+            scalar_bar = simple.GetScalarBar(rmsf_lut, self.render_view)
+            scalar_bar.Visibility = 1 if needs_rmsf_bar else 0

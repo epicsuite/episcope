@@ -146,7 +146,7 @@ class LineDisplay(Display):
         }
 
 class TubeDisplay(Display):
-    def __init__(self):
+    def __init__(self, rmsf_lut=None):
         super().__init__()
         self._output = simple.Tube()
         # init _scale_tube_size_to_rmsf
@@ -183,55 +183,7 @@ class TubeDisplay(Display):
         self.lut.ScalarRangeInitialized = 1.0
 
         # colormap used for rmsf
-        self.rmsf_lut = simple.CreateLookupTable()
-        self.rmsf_lut.RGBPoints = [
-            0.700000,
-            0.231373,
-            0.298039,
-            0.752941,
-
-            0.775000,
-            0.392157,
-            0.529412,
-            0.901961,
-
-            0.850000,
-            0.631373,
-            0.760784,
-            0.964706,
-
-            0.925000,
-            0.827451,
-            0.894118,
-            0.976471,
-
-            1.000000,
-            0.960784,
-            0.960784,
-            0.941176,
-
-            1.050000,
-            0.996078,
-            0.878431,
-            0.713725,
-
-            1.100000,
-            0.956863,
-            0.611765,
-            0.431373,
-
-            1.150000,
-            0.839216,
-            0.321569,
-            0.282353,
-
-            1.200000,
-            0.647059,
-            0.000000,
-            0.149020,
-        ]
-        self.rmsf_lut.ColorSpace = "RGB"
-        self.rmsf_lut.ScalarRangeInitialized = 1.0
+        self.rmsf_lut = rmsf_lut
 
         self.variable = self._variable
 

@@ -499,9 +499,6 @@ class App:
             self.context.visualizations[i] = visualization
 
     def on_camera_reset(self, quadrant_id=None, reset=True):
-        print('in on_camera_reset')
-        print(quadrant_id)
-        print(reset)
         quadrant_ids = (
             range(self.N_QUADRANTS_3D) if quadrant_id is None else [quadrant_id]
         )
