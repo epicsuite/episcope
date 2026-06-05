@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from paraview import simple
+from paraview import (
+    servermanager,
+    simple,
+)
 
 # selection help
 from episcope.library.viz.selection_keys import SELECTION_OBJECT_ID, SELECTION_OBJECT_KIND
@@ -131,11 +134,13 @@ class LineDisplay(Display):
     def __init__(self):
         super().__init__()
         self._output = None
+        self._vtk_obj = None
 
     @Display.input.setter
     def input(self, value):
         self._input = value
         self._output = value  # no filter, just pass-through
+        self._vtk_obj = servermanager.Fetch(self._output)
 
     @Display.representation_properties.getter
     def representation_properties(self):

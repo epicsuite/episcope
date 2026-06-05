@@ -18,22 +18,16 @@ from trame.widgets import vuetify3 as vuetify
 from episcope.app.state import Display as DisplayState
 from episcope.app.state import DisplayOption, EpiscopeState, StateAdapterQuadrant3D
 from episcope.library.io.v1_2 import Ensemble, SourceProvider
+import episcope.library.viz.locator as locator_helper
 from episcope.library.viz.visualization import Visualization
 from episcope.library.viz.selection_keys import SELECTION_OBJECT_ID, SELECTION_OBJECT_KIND
 
 from vtkmodules.numpy_interface import dataset_adapter as dsa
-from vtkmodules.vtkCommonDataModel import (
-        vtkDataObject,
-        vtkSelectionNode,
-)
 from vtkmodules.vtkCommonCore import (
         vtkIdTypeArray,
 )
 from vtkmodules.vtkInteractionStyle import (
     vtkInteractorStyleRubberBandPick,
-)
-from vtkmodules.vtkRenderingCore import (
-    vtkHardwareSelector,
 )
 
 @TrameApp()
@@ -76,7 +70,6 @@ class App:
         self.context.render_window_interactors = [None] * self.N_QUADRANTS_3D
         self.context.interactor_selections = [None] * self.N_QUADRANTS_3D
         self.context.base_interactor_styles = [None] * self.N_QUADRANTS_3D
-        self.context.selectors = [None] * self.N_QUADRANTS_3D
         self.context.structure_index_arrays = [None] * self.N_QUADRANTS_3D
         self.context.visualizations = [None] * self.N_QUADRANTS_3D
         self.context.camera_links = [None] * self.N_QUADRANTS_3D
@@ -110,9 +103,6 @@ class App:
             # maybe can use 1 for all renderviews
             self.context.interactor_selections[i] = vtkInteractorStyleRubberBandPick()
             self.context.base_interactor_styles[i] = self.context.render_window_interactors[i].GetInteractorStyle()
-            self.context.selectors[i] = vtkHardwareSelector()
-            self.context.selectors[i].SetRenderer(self.context.render_views[i].GetRenderer())
-            self.context.selectors[i].SetFieldAssociation(vtkDataObject.FIELD_ASSOCIATION_POINTS)
 
         self.context.quadrants_3d = quadrants_3d
 
@@ -580,47 +570,90 @@ class App:
             # remote view
             self.context.render_window_interactors[quadrant_id].SetInteractorStyle(self.context.base_interactor_styles[quadrant_id])
 
-
     def on_box_selection_change(self, selection, quadrant_id):
-        # disable selection mode
+        # Disable selection mode
         key = f"vtk_selection__{quadrant_id}"
         self.server.state[key] = False
-        selector = self.context.selectors[quadrant_id]
+
         area = selection.get("selection")
-        selector.SetArea(
-            int(area[0]),
-            int(area[2]),
-            int(area[1]),
-            int(area[3]),
+        if area is None:
+            return
+
+        x0, x1, y0, y1 = map(float, area)
+
+        x0, x1 = sorted((x0, x1))
+        y0, y1 = sorted((y0, y1))
+
+        pixel_pad = 1.0
+        x0 -= pixel_pad
+        x1 += pixel_pad
+        y0 -= pixel_pad
+        y1 += pixel_pad
+
+        # get the renderer for this quadrant
+        renderer = self.context.render_views[quadrant_id].GetRenderer()
+
+        if renderer is None:
+            print("No renderer available for selection")
+            return
+
+        # get the line display vtk object
+        for display_id, display_meta in self.context.visualizations[quadrant_id]._displays.items():
+            if display_meta["track_type"] == "line":
+                line_ds = self.context.visualizations[quadrant_id]._displays[display_id]['display']._vtk_obj
+
+        if line_ds is None or line_ds.GetPoints() is None:
+            print("No structure line dataset available for selection")
+            return
+
+        if not hasattr(self, "_structure_line_display_cache"):
+            self._structure_line_display_cache = {}
+
+        camera = renderer.GetActiveCamera()
+
+        cache_key = (
+            locator_helper._dataset_points_mtime(line_ds),
+            camera.GetMTime(),
+            renderer.GetMTime(),
+            tuple(renderer.GetSize()),
+            tuple(renderer.GetOrigin()),
+            float(renderer.GetTiledAspectRatio()),
         )
 
-        # Common server selection
-        s = selector.Select()
+        cache_entry = self._structure_line_display_cache.get(quadrant_id)
 
-        objects = {}
-        for i in range(s.GetNumberOfNodes()):
-            node = s.GetNode(i)
-            props = node.GetProperties()
-            prop = props.Get(vtkSelectionNode.PROP())
+        if cache_entry is None or cache_entry["cache_key"] != cache_key:
+            points_np = dsa.numpy_support.vtk_to_numpy(line_ds.GetPoints().GetData())
 
-            object_id = None
-            object_kind = None
+            display_xyz, valid = locator_helper._project_points_to_display(
+                renderer=renderer,
+                points_xyz=points_np,
+            )
 
-            if prop is not None:
-                keys = prop.GetPropertyKeys()
-                # SELECTION_OBJECT_ID and SELECTION_OBJECT_KIND
-                #   imported from selection_keys.py
-                if keys is not None:
-                    if keys.Has(SELECTION_OBJECT_ID):
-                        object_id = keys.Get(SELECTION_OBJECT_ID)
-                        objects[object_id] = i
+            cache_entry = {
+                "cache_key": cache_key,
+                "display_xyz": display_xyz,
+                "valid": valid,
+            }
+            self._structure_line_display_cache[quadrant_id] = cache_entry
 
-        if 'structure-line' not in objects.keys():
-            print('Needs structure line for selection')
-        else:
-            n = s.GetNode(objects['structure-line'])
-            ids = dsa.vtkDataArrayToVTKArray(n.GetSelectionData().GetArray("SelectedIds"))
-            self.add_selection(quadrant_id, ids)
+        display_xyz = cache_entry["display_xyz"]
+        valid = cache_entry["valid"]
+
+        xs = display_xyz[:, 0]
+        ys = display_xyz[:, 1]
+
+        mask = (
+            valid
+            & (xs >= x0)
+            & (xs <= x1)
+            & (ys >= y0)
+            & (ys <= y1)
+        )
+
+        selected_ids = np.flatnonzero(mask).astype(np.int64)
+
+        self.add_selection(quadrant_id, selected_ids)
 
     def increments_within_ranges(self, ranges, step=10000):
         values = set()
@@ -644,13 +677,37 @@ class App:
         return sorted(values)
 
     def input_index_to_plot_id(self, input_index_array, quadrant_id):
-        plot_ids = set()
-
         d = self.context.plot_peak_mapper[quadrant_id]
-        for idx in input_index_array:
-            plot_ids.add(d[min(d, key=lambda k: abs(k - idx))])
 
-        return sorted(plot_ids)
+        if not d:
+            return []
+
+        idxs = np.asarray(input_index_array, dtype=np.int64)
+
+        if idxs.size == 0:
+            return []
+
+        # Build sorted key/value arrays
+        keys = np.fromiter(d.keys(), dtype=np.int64, count=len(d))
+        order = np.argsort(keys)
+
+        keys = keys[order]
+        values = np.asarray([d[int(k)] for k in keys])
+
+        # For each selected index, find insertion position in sorted keys
+        pos = np.searchsorted(keys, idxs)
+
+        right = np.clip(pos, 0, len(keys) - 1)
+        left = np.clip(pos - 1, 0, len(keys) - 1)
+
+        # Pick the closer of left/right neighbor.
+        # Ties choose the lower key.
+        choose_left = np.abs(idxs - keys[left]) <= np.abs(keys[right] - idxs)
+        nearest = np.where(choose_left, left, right)
+
+        plot_ids = values[nearest]
+
+        return sorted(set(plot_ids.tolist()))
 
     def on_plotly_selected(self, quadrant_id, points):
         if not points:
@@ -711,13 +768,10 @@ class App:
 
         # pass ids to SelectionDisplay object
         displays = self.context.visualizations[quadrant_id]._displays.values()
-        count = 0
-        for display_meta in displays:
+        for select_display_idx, display_meta in enumerate(displays):
             if display_meta["track_name"] == "select":
                 break
-            else:
-                count += 1
-        select_display = list(displays)[count]["display"]
+        select_display = list(displays)[select_display_idx]["display"]
         select_display.ids = vtk_ids
 
         # update renderview to show selection
