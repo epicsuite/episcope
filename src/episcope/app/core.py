@@ -506,9 +506,10 @@ class App:
         for i in quadrant_ids:
             pv_view = self.context.pv_views[i][0]
             render_view = self.context.render_views[i]
-            render_view.Update()
             if reset:
                 pv_view.reset_camera()
+                render_view.ResetActiveCameraToNegativeZ()
+            render_view.Update()
             simple.Render(render_view)
             pv_view.update()
 
@@ -952,7 +953,7 @@ class App:
                                     icon="mdi-home",
                                     dense=True,
                                     title="Reset camera",
-                                    click=lambda **kwargs: self.on_camera_reset(quadrant_id=quadrant_id, reset=True),
+                                    click=lambda qid=quadrant_id, **_: self.on_camera_reset(quadrant_id=qid, reset=True),
                                     style=(
                                         "width: 32px; height: 32px; min-width: 32px; "
                                         "display: flex; align-items: center; justify-content: center; "
