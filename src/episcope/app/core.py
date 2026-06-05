@@ -602,7 +602,9 @@ class App:
             if display_meta["track_type"] == "line":
                 line_ds = self.context.visualizations[quadrant_id]._displays[display_id]['display']._vtk_obj
 
-        if line_ds is None or line_ds.GetPoints() is None:
+        try:
+            line_ds.GetPoints()
+        except:
             print("No structure line dataset available for selection")
             return
 
@@ -813,6 +815,11 @@ class App:
         empty_ids.SetNumberOfTuples(0)
 
         displays = list(self.context.visualizations[quadrant_id]._displays.values())
+
+        # exit if displays is empty
+        if displays == []:
+            return
+
         select_display = next(
             display_meta["display"]
             for display_meta in displays
@@ -927,10 +934,10 @@ class App:
                                     title="Clear selection",
                                     click=lambda qid=quadrant_id, **_: self.remove_selection(qid),
                                     style=(
-                                        "'width: 32px; height: 32px; min-width: 32px; "
+                                        "width: 32px !important; height: 32px !important; min-width: 32px; "
                                         "display: flex; align-items: center; justify-content: center; "
-                                        "background-color: rgba(180,70,70,0.8); border-radius: 50%; "
-                                        "position: absolute; bottom: 5px; right: 42px; z-index: 1;'"
+                                        "background-color: rgba(180,70,70,0.8); border-radius: 50% !important; "
+                                        "position: absolute; bottom: 5px; right: 42px; z-index: 1;"
                                     ),
                                     children=[
                                         vuetify.VIcon(
