@@ -807,12 +807,48 @@ class App:
 
         self.on_camera_reset(quadrant_id, reset=False)
 
-
     def remove_selection(self, quadrant_id):
-        print(ids)
+        # Clear renderview / line selection
+        empty_ids = vtkIdTypeArray()
+        empty_ids.SetNumberOfTuples(0)
 
-        # pass ids to renderview selection
-        # pass ids to plot
+        displays = list(self.context.visualizations[quadrant_id]._displays.values())
+        select_display = next(
+            display_meta["display"]
+            for display_meta in displays
+            if display_meta["track_name"] == "select"
+        )
+
+        select_display.ids = empty_ids
+
+        rep = simple.GetRepresentation(
+            select_display.output,
+            self.context.render_views[quadrant_id],
+        )
+        if rep is None:
+            rep = simple.Show(
+                select_display.output,
+                self.context.render_views[quadrant_id],
+            )
+
+        for key, value in select_display.representation_properties.items():
+            setattr(rep, key, value)
+
+        # Clear plot selection
+        self.context.plot_ids[quadrant_id] = []
+
+        if self.context.plot_peak_mapper[quadrant_id] is not None:
+            fig = self.context.plot_figures[quadrant_id]
+
+            fig.data[0].update(
+                selectedpoints=None,
+                selected={"marker": {"color": None}},
+                unselected={"marker": {"opacity": 1.0}},
+            )
+
+            self.context.plot_views[quadrant_id].update(fig)
+
+        self.on_camera_reset(quadrant_id, reset=False)
 
     def _build_ui(self):
         self.state.trame__title = "Episcope"
@@ -884,6 +920,25 @@ class App:
                                     ),
                                     dense=True,
                                     hide_details=True,
+                                ),
+                                vuetify.VBtn(
+                                    icon=True,
+                                    small=True,
+                                    title="Clear selection",
+                                    click=lambda qid=quadrant_id, **_: self.remove_selection(qid),
+                                    style=(
+                                        "'width: 32px; height: 32px; min-width: 32px; "
+                                        "display: flex; align-items: center; justify-content: center; "
+                                        "background-color: rgba(180,70,70,0.8); border-radius: 50%; "
+                                        "position: absolute; bottom: 5px; right: 42px; z-index: 1;'"
+                                    ),
+                                    children=[
+                                        vuetify.VIcon(
+                                            "mdi-close",
+                                            small=True,
+                                            color="white",
+                                        )
+                                    ],
                                 ),
                                 vuetify.VBtn(
                                     small=True,
