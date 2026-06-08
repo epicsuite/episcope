@@ -111,3 +111,30 @@ labels:
 spheres:
   color: [1, 0, 1]
 ```
+
+## GUI Controls
+
+|![controls](doc/img/GUI_buttons.jpg)|
+| ---- |
+|*Overview of GUI controls*|
+
+1. Dataset selection (Chromosome, Experiment, Timestep)
+2. Clear Chromosome, Apply Chromosome, Chromosome Representations
+3. Reset Camera
+4. Clear Selection
+5. Enable/Disable Renderview Selection
+6. Enable/Disable Labels, Enable/Disable linked camera between views, Terminate server
+
+## RMSF Coloring
+If the structure.csv column has a rmsf column, the structure can be colored to show chromatin mobility (`rmsf`) with an option to also scale the tube size by rmsf (`rmsf_scaled`).
+
+|![rmsf_example](doc/img/rmsf_coloring.png)|
+| ---- |
+|*Example RMSF coloring video*|
+
+## Synced Selection for Narrow Peak Data
+If the data has a narrow peak variable, you can do a synced selection between the 3D object in the renderview and the 2D plot. *IMPORTANT: structure -> line must be enabled in the representations for the selection to work*.
+
+|![selection_example](doc/img/selection.gif)|
+| ---- |
+|*Example synced selection video*|
