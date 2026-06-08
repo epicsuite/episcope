@@ -465,7 +465,7 @@ class Visualization:
         return display, representation, repr_props
 
     def remove_all_displays(self):
-        for display_meta in self._displays.values():
+        for display_id, display_meta in enumerate(self._displays.values()):
             if isinstance(display_meta["display"], VtkDisplay):
                 self.render_view.GetClientSideObject().GetRenderer().RemoveActor(
                     display_meta["display"].output
@@ -474,6 +474,7 @@ class Visualization:
                 simple.Hide(display_meta["display"].output)
                 simple.Delete(display_meta["representation"])
                 simple.Delete(display_meta["display"].output)
+            self._sync_scalar_bars(display_id)
 
         self._displays = {}
 
