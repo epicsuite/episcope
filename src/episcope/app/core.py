@@ -171,7 +171,6 @@ class App:
         quadrant: StateAdapterQuadrant3D = self.context.quadrants_3d[quadrant_id]
         visualization: Visualization = self.context.visualizations[quadrant_id]
         visualization.remove_all_displays()
-        self.context.pv_views[quadrant_id].update()
         quadrant.chromosome = ""
         quadrant.experiment = ""
         quadrant.timestep = ""
@@ -190,6 +189,7 @@ class App:
         figure.update_yaxes({"title": None}, secondary_y=True)
         plot_widget = self.context.plot_views[quadrant_id]
         plot_widget.update(figure)
+        self.on_camera_reset(quadrant_id, reset=True)
 
     def on_remove_labels(self, quadrant_id):
         visualization: Visualization = self.context.visualizations[quadrant_id]
