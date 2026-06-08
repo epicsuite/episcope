@@ -417,7 +417,20 @@ class App:
         # from https://plotly.com/python-api-reference/generated/plotly.graph_objects.Scatter.html
         #  'If there are less than 20 points and the trace is not stacked then the default is
         #  “lines+markers”. Otherwise, “lines”.'
-        figure.add_trace(plotly_go.Scatter(x=x, y=y, text=start_end, name=track_name, mode="markers"), secondary_y=False)
+        figure.add_trace(
+            plotly_go.Scatter(
+                x=x,
+                y=y,
+                text=start_end,
+                name=track_name,
+                hovertemplate =
+                'Value: %{y:.2f}'+
+                '<br>Summit: %{x}<br>'+
+                '%{text}',
+                mode="markers"
+            ),
+            secondary_y=False
+        )
 
     def on_add_point_track_plot(self, quadrant_id, track_name):
         visualization: Visualization = self.context.visualizations[quadrant_id]
@@ -803,7 +816,13 @@ class App:
             fig.data[0].update(
                 selectedpoints=self.context.plot_ids[quadrant_id],
                 selected={"marker": {"color": "lime"}},
-                unselected={"marker": {"opacity": 0.01}}
+                unselected={"marker": {"opacity": 0.01}},
+                hoverlabel=dict(
+                    bgcolor=[
+                        "lime" if i in plot_ids else "#636efa"
+                        for i in range(len(fig.data[0].x))
+                    ]
+                )
             )
 
             self.context.plot_views[quadrant_id].update(fig)
@@ -852,6 +871,9 @@ class App:
                 selectedpoints=None,
                 selected={"marker": {"color": None}},
                 unselected={"marker": {"opacity": 1.0}},
+                hoverlabel=dict(
+                    bgcolor=["#636efa" for i in range(len(fig.data[0].x))]
+                )
             )
 
             self.context.plot_views[quadrant_id].update(fig)
