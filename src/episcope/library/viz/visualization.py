@@ -474,9 +474,9 @@ class Visualization:
                 simple.Hide(display_meta["display"].output)
                 simple.Delete(display_meta["representation"])
                 simple.Delete(display_meta["display"].output)
-            self._sync_scalar_bars(display_id)
 
         self._displays = {}
+        self._sync_scalar_bars()
 
         for source_meta in self._sources.values():
             simple.Delete(source_meta["source"].output)
@@ -556,9 +556,9 @@ class Visualization:
             if source_meta["ref_count"] <= 0:
                 del self._sources[source_key]
 
-        self._sync_scalar_bars(display_id)
-
         del self._displays[display_id]
+
+        self._sync_scalar_bars()
 
     def _create_rmsf_lut(self):
         rmsf_lut = simple.CreateLookupTable()
@@ -615,10 +615,11 @@ class Visualization:
 
         return rmsf_lut
 
-    def _sync_scalar_bars(self, display_id):
+    def _sync_scalar_bars(self):
+
         needs_rmsf_bar = any(
-            display_meta.get("track_type") == "structure"
-            and display_meta.get("display_type") in {"rmsf", "rmsf_scaled"}
+            display_meta.get("track_name") == "structure"
+            and display_meta.get("track_type") in {"rmsf", "rmsf_scaled"}
             for display_meta in self._displays.values()
         )
 
